@@ -3,16 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SKG Tiles & Sanitary POS • Burari, Delhi</title>
+  <title>SKG Tiles &amp; Sanitary ERP POS • Burari Main Road</title>
   <!-- Tailwind CSS 3.4.17 -->
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <!-- Font Awesome Icons -->
+  <!-- Font Awesome 6.5.1 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <!-- QRCode.js for Dynamic UPI QR -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
     body { font-family: 'Inter', sans-serif; }
+    /* Hide scrollbars for pill navigation */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     /* Print specific styling */
     @media print {
       body * { visibility: hidden; }
@@ -23,7 +26,7 @@
         top: 0;
         width: 100%;
         margin: 0;
-        padding: 10px;
+        padding: 12px;
         background: white !important;
         color: black !important;
       }
@@ -33,221 +36,932 @@
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col">
 
-  <!-- TOP APP HEADER -->
-  <header class="bg-slate-900 text-white shadow-md sticky top-0 z-30 px-4 py-3 border-b border-slate-800">
-    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-      <!-- Store Branding -->
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center font-black text-slate-950 text-xl shadow">
+  <!-- ==================== TOP NAVIGATION HEADER ==================== -->
+  <header class="bg-slate-900 text-white shadow-md sticky top-0 z-30 px-3 py-2.5 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2.5">
+      
+      <!-- Brand & Location -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-lg bg-amber-500 flex items-center justify-center font-black text-slate-950 text-lg shadow">
           SKG
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="font-bold text-lg leading-tight tracking-wide text-white">SKG TILES &amp; SANITARY STUDIO</h1>
-            <span class="text-xs bg-amber-400 text-slate-950 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">POS v2.0</span>
+            <h1 class="font-extrabold text-sm md:text-base leading-tight tracking-wide text-white">SKG TILES &amp; SANITARY HUB</h1>
+            <span class="text-[10px] bg-amber-400 text-slate-950 font-black px-1.5 py-0.5 rounded uppercase tracking-wider">ERP v3.0</span>
           </div>
-          <p class="text-xs text-slate-400">Burari Main Road, Delhi • Ph: +91 98765 43210</p>
+          <p class="text-[11px] text-slate-400">Burari Main Road, Delhi • <span id="headerLiveStatus" class="text-emerald-400 font-medium">Live Terminal</span></p>
         </div>
       </div>
 
-      <!-- Quick Action Controls -->
-      <div class="flex items-center gap-2 flex-wrap">
-        <!-- Tile Calculator Tool -->
-        <button id="openCalculatorBtn" class="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
-          <i class="fa-solid fa-calculator"></i>
-          <span>Sq.Ft &rarr; Peti Calc</span>
+      <!-- Quick Module Switcher & Nav Buttons -->
+      <div class="flex items-center gap-1.5 flex-wrap text-xs">
+        
+        <!-- POS Billing Screen -->
+        <button id="navBillingBtn" class="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow transition">
+          <i class="fa-solid fa-cash-register"></i>
+          <span>Billing</span>
         </button>
 
-        <!-- Udhaar / Credit Ledger -->
-        <button id="openLedgerBtn" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
-          <i class="fa-solid fa-book-bookmark"></i>
-          <span>Thekedaar Khata</span>
-          <span id="ledgerCountBadge" class="bg-emerald-500 text-slate-950 font-bold text-[10px] px-1.5 py-0.2 rounded-full">0</span>
+        <!-- Orders / Advance Booking -->
+        <button id="navOrdersBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-clipboard-list text-amber-400"></i>
+          <span>Orders</span>
+          <span id="activeOrdersBadge" class="bg-amber-500 text-slate-950 font-bold text-[10px] px-1.5 py-0.2 rounded-full">0</span>
         </button>
 
-        <!-- Price Tier Mode Switcher -->
-        <div class="bg-slate-800 p-0.5 rounded-lg border border-slate-700 flex items-center">
-          <button id="btnTierB2C" class="px-2.5 py-1 text-xs font-medium rounded-md transition bg-amber-500 text-slate-950 font-bold shadow">
-            <i class="fa-solid fa-user text-[10px] mr-1"></i> B2C Retail
-          </button>
-          <button id="btnTierB2B" class="px-2.5 py-1 text-xs font-medium rounded-md text-slate-300 hover:text-white transition">
-            <i class="fa-solid fa-truck-fast text-[10px] mr-1"></i> B2B Thekedaar
-          </button>
-        </div>
+        <!-- Live Stock & Inwards -->
+        <button id="navStockBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-boxes-stacked text-cyan-400"></i>
+          <span>Live Stock</span>
+        </button>
+
+        <!-- Reports & P&L Dashboard -->
+        <button id="navReportsBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-chart-line text-emerald-400"></i>
+          <span>Reports / P&amp;L</span>
+        </button>
+
+        <!-- OPEX Expenses -->
+        <button id="navOpexBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-receipt text-rose-400"></i>
+          <span>OPEX</span>
+        </button>
+
+        <!-- Capital & Loans -->
+        <button id="navCapitalBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-building-columns text-purple-400"></i>
+          <span>Capital / Loans</span>
+        </button>
+
+        <!-- Thekedaar Khata / Ledger -->
+        <button id="navLedgerBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-book-bookmark text-blue-400"></i>
+          <span>Khata</span>
+          <span id="headerPendingUdhaarBadge" class="bg-rose-500 text-white font-bold text-[10px] px-1.5 py-0.2 rounded-full">0</span>
+        </button>
+
+        <!-- Multi-User Switcher -->
+        <button id="switchUserBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-user-shield text-amber-400"></i>
+          <span id="currentUserLabel">Admin</span>
+        </button>
 
         <!-- Settings Button -->
-        <button id="openSettingsBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 p-2 rounded-lg text-xs transition" title="Settings &amp; Backup">
+        <button id="openSettingsBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 p-2 rounded-lg transition" title="Settings &amp; Backup">
           <i class="fa-solid fa-gear"></i>
         </button>
       </div>
+
     </div>
   </header>
 
-  <!-- MAIN 2-COLUMN BILLING LAYOUT -->
-  <main class="max-w-7xl mx-auto w-full flex-1 p-3 md:p-4 grid grid-cols-1 lg:grid-cols-12 gap-4">
+  <!-- ==================== MAIN CONTENT AREA ==================== -->
+  <main class="max-w-7xl mx-auto w-full flex-1 p-3 md:p-4">
 
-    <!-- LEFT COLUMN: PRODUCT CATALOG & FILTER (7 Cols) -->
-    <section class="lg:col-span-7 flex flex-col gap-3">
+    <!-- VIEW 1: POS BILLING SCREEN (Active by Default) -->
+    <div id="viewBilling" class="grid grid-cols-1 lg:grid-cols-12 gap-3.5">
       
-      <!-- Search & Category Filters Bar -->
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 flex flex-col gap-2.5">
-        <div class="relative">
-          <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-sm"></i>
-          <input type="text" id="searchInput" placeholder="Search by tile size (e.g. 12x18, 2x2, 2x4), design, or sanitaryware..." 
-                 class="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-amber-500 focus:bg-white transition">
-          <button id="clearSearchBtn" class="hidden absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600">
-            <i class="fa-solid fa-xmark text-sm"></i>
-          </button>
-        </div>
-
-        <!-- Category Horizontal Pills -->
-        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs scrollbar-none" id="categoryPills">
-          <!-- Rendered via JS -->
-        </div>
-      </div>
-
-      <!-- Product Cards Grid -->
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 flex-1 flex flex-col">
-        <div class="flex items-center justify-between text-xs text-slate-500 mb-2.5 px-1 font-medium">
-          <span id="catalogCount">Showing 0 products</span>
-          <span class="flex items-center gap-2">
-            <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
-            Current Pricing: <strong id="currentTierLabel" class="text-slate-800">B2C Retail Rate</strong>
-          </span>
-        </div>
-
-        <!-- Product Cards Container -->
-        <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 overflow-y-auto max-h-[calc(100vh-280px)] pr-1">
-          <!-- Rendered via JS -->
-        </div>
-      </div>
-    </section>
-
-    <!-- RIGHT COLUMN: CART, INVOICE & DYNAMIC PRICING (5 Cols) -->
-    <section class="lg:col-span-5 flex flex-col gap-3">
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3.5 flex flex-col h-full">
-
-        <!-- Cart Header: Invoice & Customer Info -->
-        <div class="border-b border-slate-200 pb-3 mb-3">
-          <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center gap-1.5">
-              <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Invoice:</span>
-              <span id="invoiceNumber" class="text-xs font-mono font-bold bg-slate-100 text-slate-800 px-2 py-0.5 rounded border border-slate-200">SKG-2026-101</span>
+      <!-- LEFT SECTION: PRODUCT CATALOG & FILTER (7 Cols) -->
+      <section class="lg:col-span-7 flex flex-col gap-3">
+        
+        <!-- Search & Filter Controls -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 flex flex-col gap-2">
+          
+          <div class="flex items-center gap-2">
+            <!-- Search Bar -->
+            <div class="relative flex-1">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-sm"></i>
+              <input type="text" id="searchInput" placeholder="Search tile (12x18, 2x2, 2x4, parking), sanitary, adhesive..." 
+                     class="w-full pl-9 pr-8 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition">
+              <button id="clearSearchBtn" class="hidden absolute right-2.5 top-2 text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-xs"></i>
+              </button>
             </div>
-            <button id="clearCartBtn" class="text-xs text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1 transition">
-              <i class="fa-regular fa-trash-can"></i> Clear Cart
+
+            <!-- Price Tier Toggle -->
+            <div class="bg-slate-100 p-0.5 rounded-lg border border-slate-200 flex items-center shrink-0">
+              <button id="btnTierB2C" class="px-2 py-1 text-[11px] font-bold rounded-md bg-amber-500 text-slate-950 shadow">
+                B2C Retail
+              </button>
+              <button id="btnTierB2B" class="px-2 py-1 text-[11px] font-medium rounded-md text-slate-600 hover:text-slate-900">
+                B2B Thekedaar
+              </button>
+            </div>
+
+            <!-- Area Calculator Trigger -->
+            <button id="openCalculatorBtn" class="bg-slate-800 hover:bg-slate-700 text-amber-400 px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition shrink-0" title="Calculate Peti from Sq.Ft">
+              <i class="fa-solid fa-calculator"></i>
+              <span class="hidden sm:inline">Peti Calc</span>
             </button>
           </div>
 
-          <!-- Customer Name & Mobile Row -->
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block text-[11px] font-semibold text-slate-500 mb-0.5">Customer / Thekedaar</label>
-              <input type="text" id="custNameInput" placeholder="Walk-in Customer" 
-                     class="w-full text-xs px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:border-amber-500">
-            </div>
-            <div>
-              <label class="block text-[11px] font-semibold text-slate-500 mb-0.5">Phone (for Khata / SMS)</label>
-              <input type="tel" id="custPhoneInput" placeholder="98765XXXXX" 
-                     class="w-full text-xs px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:border-amber-500">
-            </div>
+          <!-- Category Horizontal Pills -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar" id="categoryPills">
+            <!-- Rendered via JS -->
           </div>
         </div>
 
-        <!-- Cart Items List Container -->
-        <div class="flex-1 overflow-y-auto max-h-[300px] mb-3 pr-1 divide-y divide-slate-100" id="cartItemsList">
-          <!-- Rendered via JS -->
-          <div class="py-10 text-center text-slate-400 text-sm">
-            <i class="fa-solid fa-cart-shopping text-3xl mb-2 text-slate-300"></i>
-            <p>Cart is empty. Tap any tile or item to add!</p>
+        <!-- Product Cards Grid -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 flex-1 flex flex-col min-h-[420px]">
+          <div class="flex items-center justify-between text-xs text-slate-500 mb-2 px-1 font-medium">
+            <span id="catalogCount">Showing 0 products</span>
+            <span class="flex items-center gap-2">
+              <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+              Mode: <strong id="currentTierLabel" class="text-slate-800">B2C Retail Rate</strong>
+            </span>
+          </div>
+
+          <!-- Product Cards Container -->
+          <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 overflow-y-auto max-h-[calc(100vh-270px)] pr-1">
+            <!-- Rendered via JS -->
           </div>
         </div>
+      </section>
 
-        <!-- Pricing Modifiers: Discount & Tax -->
-        <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-200 text-xs mb-3 space-y-2">
-          <!-- Discount Row -->
-          <div class="flex items-center justify-between gap-2">
-            <span class="font-medium text-slate-600">Discount (Chhoot):</span>
-            <div class="flex items-center gap-1 w-36">
-              <input type="number" id="discountInput" value="0" min="0" 
-                     class="w-20 px-2 py-1 text-right bg-white border border-slate-300 rounded font-semibold text-slate-800 text-xs focus:outline-none focus:border-amber-500">
-              <select id="discountType" class="bg-white border border-slate-300 rounded px-1 py-1 text-xs font-semibold focus:outline-none">
-                <option value="flat">₹ Flat</option>
-                <option value="percent">% Off</option>
-              </select>
+      <!-- RIGHT SECTION: CART, INVOICE & DYNAMIC PRICING (5 Cols) -->
+      <section class="lg:col-span-5 flex flex-col gap-3">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3.5 flex flex-col h-full">
+
+          <!-- Order Type & Customer Details -->
+          <div class="border-b border-slate-200 pb-3 mb-2.5 space-y-2">
+            
+            <!-- Invoice No + Bill / Advance Order Switch -->
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-1.5">
+                <span class="text-[11px] font-bold text-slate-500 uppercase">Doc:</span>
+                <span id="invoiceNumber" class="text-xs font-mono font-bold bg-slate-100 text-slate-800 px-2 py-0.5 rounded border border-slate-200">INV-2026-101</span>
+              </div>
+              <!-- Direct Sale vs Advance Booking Toggle -->
+              <div class="flex items-center bg-slate-100 rounded-lg p-0.5 text-[11px] border border-slate-200">
+                <button id="typeDirectSale" class="px-2 py-0.5 rounded font-bold bg-emerald-600 text-white shadow">
+                  Direct Sale
+                </button>
+                <button id="typeAdvanceOrder" class="px-2 py-0.5 rounded font-medium text-slate-600 hover:text-slate-900">
+                  Advance Order
+                </button>
+              </div>
+              <button id="clearCartBtn" class="text-xs text-rose-600 hover:text-rose-700 font-medium" title="Clear Cart">
+                <i class="fa-regular fa-trash-can"></i>
+              </button>
+            </div>
+
+            <!-- Customer & Contact Inputs -->
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-500 mb-0.5">Customer / Thekedaar</label>
+                <input type="text" id="custNameInput" placeholder="Walk-in Customer" 
+                       class="w-full text-xs px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:border-amber-500">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-500 mb-0.5">Phone (for Khata / SMS)</label>
+                <input type="tel" id="custPhoneInput" placeholder="98765XXXXX" 
+                       class="w-full text-xs px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:border-amber-500">
+              </div>
+            </div>
+
+            <!-- Delivery Date & Site Address (Visible when Order Booking is active) -->
+            <div id="orderBookingDetailsRow" class="hidden grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
+              <div>
+                <label class="block text-[11px] font-semibold text-amber-700 mb-0.5">Expected Delivery Date</label>
+                <input type="date" id="orderDeliveryDate" 
+                       class="w-full text-xs px-2 py-1 bg-amber-50 border border-amber-300 rounded-lg focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-amber-700 mb-0.5">Delivery Site Location</label>
+                <input type="text" id="orderSiteLocation" placeholder="e.g. Plot 42, Sant Nagar" 
+                       class="w-full text-xs px-2 py-1 bg-amber-50 border border-amber-300 rounded-lg focus:outline-none">
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Cart Items List (With DIRECT QUANTITY INPUT + DYNAMIC PRICING) -->
+          <div class="flex-1 overflow-y-auto max-h-[250px] mb-2 pr-1 divide-y divide-slate-100" id="cartItemsList">
+            <!-- Rendered via JS -->
+            <div class="py-8 text-center text-slate-400 text-xs">
+              <i class="fa-solid fa-cart-shopping text-3xl mb-2 text-slate-300"></i>
+              <p>Cart is empty. Tap any tile or item to add!</p>
             </div>
           </div>
 
-          <!-- GST Slab Selector -->
-          <div class="flex items-center justify-between gap-2">
-            <span class="font-medium text-slate-600">Tax / GST Slab:</span>
-            <select id="taxSlabSelect" class="bg-white border border-slate-300 rounded px-2 py-1 text-xs font-semibold text-slate-800 focus:outline-none focus:border-amber-500">
-              <option value="0">0% (Kutcha / Cash Memo)</option>
-              <option value="18" selected>18% GST (Tiles &amp; Bath Standard)</option>
-              <option value="12">12% GST (Building Materials)</option>
-              <option value="28">28% GST (Luxury Items)</option>
-              <option value="5">5% GST (Basic Sand/Lime)</option>
+          <!-- Freight & Transport Charges Row -->
+          <div class="bg-slate-50 rounded-lg p-2 border border-slate-200 text-xs mb-2 space-y-1.5">
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-medium text-slate-600 flex items-center gap-1">
+                <i class="fa-solid fa-truck text-slate-400"></i> Freight / Bhada:
+              </span>
+              <div class="flex items-center gap-1 w-32">
+                <span class="text-slate-500">₹</span>
+                <input type="number" id="freightInput" value="0" min="0" 
+                       class="w-full px-2 py-0.5 text-right bg-white border border-slate-300 rounded font-semibold text-slate-800 text-xs focus:outline-none focus:border-amber-500"
+                       placeholder="0">
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-medium text-slate-600 flex items-center gap-1">
+                <i class="fa-solid fa-person-carry-box text-slate-400"></i> Palledari / Labor:
+              </span>
+              <div class="flex items-center gap-1 w-32">
+                <span class="text-slate-500">₹</span>
+                <input type="number" id="laborInput" value="0" min="0" 
+                       class="w-full px-2 py-0.5 text-right bg-white border border-slate-300 rounded font-semibold text-slate-800 text-xs focus:outline-none focus:border-amber-500"
+                       placeholder="0">
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-200">
+              <span class="font-medium text-slate-600">Discount &amp; GST:</span>
+              <div class="flex items-center gap-1">
+                <input type="number" id="discountInput" value="0" min="0" placeholder="Disc"
+                       class="w-16 px-1.5 py-0.5 text-right bg-white border border-slate-300 rounded font-semibold text-xs focus:outline-none">
+                <select id="discountType" class="bg-white border border-slate-300 rounded py-0.5 text-xs font-semibold">
+                  <option value="flat">₹ Flat</option>
+                  <option value="percent">% Off</option>
+                </select>
+                <select id="taxSlabSelect" class="bg-white border border-slate-300 rounded py-0.5 text-xs font-semibold text-slate-800">
+                  <option value="18" selected>18% GST</option>
+                  <option value="0">0% Cash</option>
+                  <option value="12">12% GST</option>
+                  <option value="28">28% GST</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Billing Totals Breakdown -->
+          <div class="border-t border-slate-200 pt-2 mb-2 space-y-1 text-xs">
+            <div class="flex justify-between text-slate-600">
+              <span>Items Total (<span id="totalPetiCount">0</span> Peti):</span>
+              <span class="font-semibold text-slate-800" id="subtotalDisplay">₹0.00</span>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <span>Freight + Labor:</span>
+              <span class="font-semibold text-slate-800" id="freightTotalDisplay">₹0.00</span>
+            </div>
+            <div class="flex justify-between text-slate-600" id="discountRow">
+              <span>Discount Applied:</span>
+              <span class="font-semibold text-rose-600" id="discountDisplay">-₹0.00</span>
+            </div>
+            <div class="flex justify-between text-slate-600" id="taxRow">
+              <span>GST (<span id="taxRateLabel">18%</span>):</span>
+              <span class="font-semibold text-slate-800" id="taxDisplay">₹0.00</span>
+            </div>
+            <div class="flex justify-between items-baseline pt-1 border-t border-slate-200 text-slate-900">
+              <span class="text-xs font-bold uppercase">Net Total Bill:</span>
+              <span class="text-lg font-black text-slate-950" id="grandTotalDisplay">₹0.00</span>
+            </div>
+          </div>
+
+          <!-- PART PAYMENT SECTION (Paid vs Pending Balance) -->
+          <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-2.5 mb-2.5 text-xs space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-800 flex items-center gap-1">
+                <i class="fa-solid fa-coins text-amber-500"></i> Part Payment / Split:
+              </span>
+              <button id="btnPayFull" class="text-[10px] bg-amber-200 hover:bg-amber-300 text-slate-900 font-bold px-2 py-0.5 rounded transition">
+                Pay Full Amount
+              </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Amount Paid Now (₹):</label>
+                <input type="number" id="partPaidAmount" min="0" value="0" 
+                       class="w-full px-2 py-1 bg-white border border-emerald-400 rounded-lg text-sm font-black text-emerald-700 text-right focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Remaining Balance (Udhaar):</label>
+                <div id="remainingBalanceDisplay" class="w-full px-2 py-1 bg-slate-100 border border-slate-300 rounded-lg text-sm font-black text-rose-600 text-right">
+                  ₹0.00
+                </div>
+              </div>
+            </div>
+
+            <!-- Payment Mode Selection -->
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-600 mb-1">Paid Mode:</label>
+              <div class="grid grid-cols-3 gap-1">
+                <button class="pay-mode-btn bg-emerald-100 border-2 border-emerald-500 text-emerald-900 font-bold py-1 px-1.5 rounded-lg text-[11px] flex items-center justify-center gap-1" data-mode="Cash">
+                  <i class="fa-solid fa-money-bill-wave"></i> Cash
+                </button>
+                <button class="pay-mode-btn bg-white border border-slate-300 text-slate-700 font-medium py-1 px-1.5 rounded-lg text-[11px] flex items-center justify-center gap-1" data-mode="UPI">
+                  <i class="fa-solid fa-qrcode"></i> UPI QR
+                </button>
+                <button class="pay-mode-btn bg-white border border-slate-300 text-slate-700 font-medium py-1 px-1.5 rounded-lg text-[11px] flex items-center justify-center gap-1" data-mode="Udhaar">
+                  <i class="fa-solid fa-handshake"></i> Full Udhaar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Actions -->
+          <div class="grid grid-cols-2 gap-2 mt-auto">
+            <!-- Dynamic UPI QR Trigger -->
+            <button id="showUpiQrBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow transition">
+              <i class="fa-solid fa-qrcode"></i> Show UPI QR
+            </button>
+
+            <!-- Generate Bill / Save Order -->
+            <button id="generateBillBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg transition">
+              <i class="fa-solid fa-receipt"></i> <span id="billBtnText">Generate &amp; Print Bill</span>
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+
+    <!-- VIEW 2: LIVE INVENTORY & PURCHASE INWARDS -->
+    <div id="viewStock" class="hidden space-y-4">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-boxes-stacked text-cyan-600"></i> Live Stock &amp; Warehouse Inventory
+            </h2>
+            <p class="text-xs text-slate-500">Track 1000 gaj godown stock &amp; record factory inwards from Morbi</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <!-- Purchase Inward Modal Trigger -->
+            <button id="openInwardModalBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 shadow transition">
+              <i class="fa-solid fa-truck-ramp-box"></i>
+              <span>+ Purchase Inward (Maal Aamad)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Stock Summary Scorecards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+            <span class="text-[11px] font-semibold text-slate-500 block">Total Peti in Godown</span>
+            <strong class="text-lg font-black text-slate-900" id="stockTotalPetiCount">0 Peti</strong>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+            <span class="text-[11px] font-semibold text-slate-500 block">Total Stock Valuation (Cost)</span>
+            <strong class="text-lg font-black text-cyan-700" id="stockTotalValuation">₹0.00</strong>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+            <span class="text-[11px] font-semibold text-slate-500 block">Retail Realization Value</span>
+            <strong class="text-lg font-black text-emerald-700" id="stockRetailRealization">₹0.00</strong>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+            <span class="text-[11px] font-semibold text-slate-500 block">Low Stock Alert (&lt;50 Peti)</span>
+            <strong class="text-lg font-black text-rose-600" id="stockLowCount">0 Items</strong>
+          </div>
+        </div>
+
+        <!-- Inventory Data Table -->
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+              <tr>
+                <th class="p-2.5">Item Name</th>
+                <th class="p-2.5">Category</th>
+                <th class="p-2.5 text-right">Cost (Landing)</th>
+                <th class="p-2.5 text-right">B2B Wholesale</th>
+                <th class="p-2.5 text-right">B2C Retail</th>
+                <th class="p-2.5 text-center">Live Stock</th>
+                <th class="p-2.5 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="stockTableBody" class="divide-y divide-slate-100">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 3: ORDERS & ADVANCE BOOKING MANAGEMENT -->
+    <div id="viewOrders" class="hidden space-y-4">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-clipboard-list text-amber-500"></i> Customer Orders &amp; Site Advance Bookings
+            </h2>
+            <p class="text-xs text-slate-500">Manage tile bookings, site deliveries, advance collected &amp; pending balances</p>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+              <tr>
+                <th class="p-2.5">Order ID / Date</th>
+                <th class="p-2.5">Customer / Contact</th>
+                <th class="p-2.5">Site Location</th>
+                <th class="p-2.5 text-right">Total Bill</th>
+                <th class="p-2.5 text-right">Advance Paid</th>
+                <th class="p-2.5 text-right">Balance Due</th>
+                <th class="p-2.5 text-center">Delivery Date</th>
+                <th class="p-2.5 text-center">Status</th>
+                <th class="p-2.5 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTableBody" class="divide-y divide-slate-100">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 4: COMPREHENSIVE REPORTS & P&L DASHBOARD -->
+    <div id="viewReports" class="hidden space-y-4">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b pb-3">
+          <div>
+            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-chart-line text-emerald-600"></i> Business Analytics &amp; Profit &amp; Loss (P&amp;L)
+            </h2>
+            <p class="text-xs text-slate-500">Comprehensive sales turnover, gross profit, OPEX deduction &amp; net in-hand cash</p>
+          </div>
+          <!-- Report Filter -->
+          <div class="flex items-center gap-2 text-xs">
+            <select id="reportPeriodFilter" class="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 font-semibold text-slate-700">
+              <option value="all">All Time History</option>
+              <option value="today">Today's Sales</option>
+              <option value="month" selected>This Month</option>
             </select>
           </div>
         </div>
 
-        <!-- Billing Totals Breakdown -->
-        <div class="border-t border-slate-200 pt-2.5 mb-3 space-y-1 text-xs">
-          <div class="flex justify-between text-slate-600">
-            <span>Subtotal (<span id="totalPetiCount">0</span> Peti / Items):</span>
-            <span class="font-semibold text-slate-800" id="subtotalDisplay">₹0.00</span>
+        <!-- High Level P&L Scorecards -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+            <span class="text-[11px] font-semibold text-slate-500 block">Total Revenue (Sales)</span>
+            <strong class="text-lg font-black text-slate-900" id="repTotalSales">₹0.00</strong>
           </div>
-          <div class="flex justify-between text-slate-600" id="discountRow">
-            <span>Discount Applied:</span>
-            <span class="font-semibold text-rose-600" id="discountDisplay">-₹0.00</span>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+            <span class="text-[11px] font-semibold text-slate-500 block">Cost of Goods (COGS)</span>
+            <strong class="text-lg font-black text-slate-600" id="repTotalCogs">₹0.00</strong>
           </div>
-          <div class="flex justify-between text-slate-600" id="taxRow">
-            <span>GST Amount (<span id="taxRateLabel">18%</span>):</span>
-            <span class="font-semibold text-slate-800" id="taxDisplay">₹0.00</span>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+            <span class="text-[11px] font-semibold text-slate-500 block">Gross Profit</span>
+            <strong class="text-lg font-black text-cyan-700" id="repGrossProfit">₹0.00</strong>
           </div>
-          <div class="flex justify-between items-baseline pt-1.5 border-t border-slate-200 text-slate-900">
-            <span class="text-sm font-bold">Grand Net Total:</span>
-            <span class="text-xl font-black text-emerald-600" id="grandTotalDisplay">₹0.00</span>
+          <div class="bg-rose-50 border border-rose-200 rounded-xl p-3">
+            <span class="text-[11px] font-semibold text-rose-700 block">Total OPEX (Expenses)</span>
+            <strong class="text-lg font-black text-rose-800" id="repTotalOpex">₹0.00</strong>
           </div>
-        </div>
-
-        <!-- Payment Mode Selection -->
-        <div class="mb-3">
-          <label class="block text-[11px] font-bold text-slate-600 mb-1">Payment Mode (Bhugtaan):</label>
-          <div class="grid grid-cols-3 gap-1.5">
-            <button class="pay-mode-btn bg-emerald-50 border-2 border-emerald-500 text-emerald-800 font-bold py-1.5 px-2 rounded-lg text-xs flex items-center justify-center gap-1 transition" data-mode="Cash">
-              <i class="fa-solid fa-money-bill-wave"></i> Cash
-            </button>
-            <button class="pay-mode-btn bg-slate-50 border border-slate-300 text-slate-700 font-semibold py-1.5 px-2 rounded-lg text-xs flex items-center justify-center gap-1 transition hover:bg-slate-100" data-mode="UPI">
-              <i class="fa-solid fa-qrcode"></i> UPI QR
-            </button>
-            <button class="pay-mode-btn bg-slate-50 border border-slate-300 text-slate-700 font-semibold py-1.5 px-2 rounded-lg text-xs flex items-center justify-center gap-1 transition hover:bg-slate-100" data-mode="Udhaar">
-              <i class="fa-solid fa-handshake"></i> Udhaar
-            </button>
+          <div class="bg-emerald-50 border border-emerald-300 rounded-xl p-3 col-span-2 md:col-span-1">
+            <span class="text-[11px] font-semibold text-emerald-700 block">Net In-Hand Profit</span>
+            <strong class="text-xl font-black text-emerald-800" id="repNetProfit">₹0.00</strong>
           </div>
         </div>
 
-        <!-- Action Triggers -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-auto">
-          <!-- Dynamic UPI QR Trigger -->
-          <button id="showUpiQrBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow transition">
-            <i class="fa-solid fa-qrcode text-sm"></i> Show Exact UPI QR
-          </button>
-
-          <!-- Generate & Print Bill -->
-          <button id="generateBillBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg transition">
-            <i class="fa-solid fa-receipt text-sm"></i> Generate &amp; Print Bill
-          </button>
+        <!-- Sales History & Transaction Logs -->
+        <h3 class="font-bold text-xs text-slate-700 uppercase tracking-wider mb-2">Completed Invoice History</h3>
+        <div class="overflow-x-auto border border-slate-200 rounded-xl max-h-[350px]">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold sticky top-0">
+              <tr>
+                <th class="p-2.5">Invoice #</th>
+                <th class="p-2.5">Date &amp; Time</th>
+                <th class="p-2.5">Customer / Mode</th>
+                <th class="p-2.5 text-right">Bill Total</th>
+                <th class="p-2.5 text-right">Paid Now</th>
+                <th class="p-2.5 text-right">Balance Due</th>
+                <th class="p-2.5 text-right">Est. Profit</th>
+              </tr>
+            </thead>
+            <tbody id="salesHistoryTableBody" class="divide-y divide-slate-100">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
         </div>
-
       </div>
-    </section>
+    </div>
+
+    <!-- VIEW 5: OPEX OPERATING EXPENSE MANAGER -->
+    <div id="viewOpex" class="hidden space-y-4">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-receipt text-rose-600"></i> Operating Expenses (OPEX) Manager
+            </h2>
+            <p class="text-xs text-slate-500">Record rent, staff salaries, electricity, tea/water &amp; showroom maintenance</p>
+          </div>
+          <button id="openAddOpexModalBtn" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 shadow transition">
+            <i class="fa-solid fa-plus"></i> Add New Expense
+          </button>
+        </div>
+
+        <!-- OPEX Summary -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          <div class="bg-rose-50 border border-rose-200 rounded-xl p-3">
+            <span class="text-[11px] font-semibold text-rose-700 block">Total OPEX Recorded</span>
+            <strong class="text-lg font-black text-rose-900" id="opexTotalAll">₹0.00</strong>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+            <span class="text-[11px] font-semibold text-slate-500 block">Rent Paid</span>
+            <strong class="text-lg font-black text-slate-800" id="opexRentTotal">₹0.00</strong>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+            <span class="text-[11px] font-semibold text-slate-500 block">Salaries Paid</span>
+            <strong class="text-lg font-black text-slate-800" id="opexSalaryTotal">₹0.00</strong>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+            <span class="text-[11px] font-semibold text-slate-500 block">Electricity &amp; Misc</span>
+            <strong class="text-lg font-black text-slate-800" id="opexMiscTotal">₹0.00</strong>
+          </div>
+        </div>
+
+        <!-- Expenses Table -->
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+              <tr>
+                <th class="p-2.5">Date</th>
+                <th class="p-2.5">Category</th>
+                <th class="p-2.5">Description / Note</th>
+                <th class="p-2.5">Payment Mode</th>
+                <th class="p-2.5 text-right">Amount (₹)</th>
+              </tr>
+            </thead>
+            <tbody id="opexTableBody" class="divide-y divide-slate-100">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 6: CAPITAL, DRAWINGS, INTEREST & LOANS -->
+    <div id="viewCapital" class="hidden space-y-4">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b pb-3">
+          <div>
+            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-building-columns text-purple-600"></i> Capital Account, Drawings &amp; Loan Ledger
+            </h2>
+            <p class="text-xs text-slate-500">Track owner equity, drawings, capital interest &amp; business loans</p>
+          </div>
+          <div class="flex gap-2">
+            <button id="openCapitalEntryBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-plus"></i> Capital / Drawing Entry
+            </button>
+            <button id="openLoanEntryBtn" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-hand-holding-dollar"></i> Add Loan
+            </button>
+          </div>
+        </div>
+
+        <!-- Capital Equation Scorecards -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+            <span class="text-[11px] font-semibold text-slate-500 block">Initial Opening Capital</span>
+            <strong class="text-lg font-black text-slate-900" id="capOpeningDisplay">₹20,00,000</strong>
+          </div>
+          <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+            <span class="text-[11px] font-semibold text-emerald-700 block">+ Additional Capital</span>
+            <strong class="text-lg font-black text-emerald-800" id="capAdditionalDisplay">₹0.00</strong>
+          </div>
+          <div class="bg-rose-50 border border-rose-200 rounded-xl p-3">
+            <span class="text-[11px] font-semibold text-rose-700 block">- Owner Drawings</span>
+            <strong class="text-lg font-black text-rose-800" id="capDrawingsDisplay">₹0.00</strong>
+          </div>
+          <div class="bg-amber-50 border border-amber-200 rounded-xl p-3">
+            <span class="text-[11px] font-semibold text-amber-700 block">+ Interest on Capital (12%)</span>
+            <strong class="text-lg font-black text-amber-800" id="capInterestDisplay">₹0.00</strong>
+          </div>
+          <div class="bg-purple-50 border border-purple-200 rounded-xl p-3 col-span-2 md:col-span-1">
+            <span class="text-[11px] font-semibold text-purple-700 block">Net Current Capital Equity</span>
+            <strong class="text-xl font-black text-purple-900" id="capNetEquityDisplay">₹20,00,000</strong>
+          </div>
+        </div>
+
+        <!-- Loans / Borrowings Section -->
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 mb-4">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-bold text-xs text-slate-800 uppercase tracking-wider">Business Loans &amp; Liabilities</h3>
+            <span class="text-xs font-bold text-rose-700">Total Outstanding: <strong id="totalOutstandingLoan">₹0.00</strong></span>
+          </div>
+          <div class="overflow-x-auto bg-white border border-slate-200 rounded-lg">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-100 border-b border-slate-200 text-slate-600 font-semibold">
+                <tr>
+                  <th class="p-2">Lender / Bank</th>
+                  <th class="p-2 text-right">Principal Loan</th>
+                  <th class="p-2 text-center">Interest Rate</th>
+                  <th class="p-2 text-right">Paid Repayment</th>
+                  <th class="p-2 text-right">Balance Due</th>
+                </tr>
+              </thead>
+              <tbody id="loansTableBody" class="divide-y divide-slate-100">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Capital Transactions Ledger -->
+        <h3 class="font-bold text-xs text-slate-700 uppercase tracking-wider mb-2">Capital Transactions Ledger</h3>
+        <div class="overflow-x-auto border border-slate-200 rounded-xl max-h-[250px]">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold sticky top-0">
+              <tr>
+                <th class="p-2.5">Date</th>
+                <th class="p-2.5">Transaction Type</th>
+                <th class="p-2.5">Particulars / Details</th>
+                <th class="p-2.5 text-right">Amount (₹)</th>
+              </tr>
+            </thead>
+            <tbody id="capitalLedgerBody" class="divide-y divide-slate-100">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 7: THEKEDAAR KHATA / LEDGER -->
+    <div id="viewLedger" class="hidden space-y-4">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-book-bookmark text-blue-600"></i> Thekedaar &bull; Credit &amp; Part-Payment Ledger
+            </h2>
+            <p class="text-xs text-slate-500">Track pending balances, payment history &amp; mark settlements</p>
+          </div>
+        </div>
+
+        <!-- Ledger Summary Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+          <div class="bg-rose-50 border border-rose-200 rounded-xl p-3">
+            <span class="text-[11px] font-semibold text-rose-700 block">Total Pending Udhaar in Market</span>
+            <strong class="text-xl font-black text-rose-800" id="totalPendingUdhaar">₹0.00</strong>
+          </div>
+          <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+            <span class="text-[11px] font-semibold text-emerald-700 block">Active Credit Customers</span>
+            <strong class="text-xl font-black text-emerald-800" id="activeCreditAccounts">0</strong>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 col-span-2 md:col-span-1">
+            <span class="text-[11px] font-semibold text-slate-500 block">Total Settled Recoveries</span>
+            <strong class="text-xl font-black text-slate-900" id="totalSettledUdhaar">₹0.00</strong>
+          </div>
+        </div>
+
+        <!-- Ledger Table -->
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+              <tr>
+                <th class="p-2.5">Date / Inv</th>
+                <th class="p-2.5">Thekedaar / Phone</th>
+                <th class="p-2.5 text-right">Bill Total</th>
+                <th class="p-2.5 text-right">Paid Amount</th>
+                <th class="p-2.5 text-right">Pending Balance</th>
+                <th class="p-2.5 text-center">Status</th>
+                <th class="p-2.5 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="ledgerTableBody" class="divide-y divide-slate-100">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
   </main>
 
   <!-- ==================== MODALS SECTION ==================== -->
+  <!-- 10. STOCK ADJUST MODAL (In-Page replacement for prompt) -->
+  <div id="adjustModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-100 text-center">
+      <h3 class="font-bold text-slate-900 text-sm mb-1" id="adjustModalTitle">Adjust Stock</h3>
+      <p class="text-xs text-slate-500 mb-3" id="adjustModalSubtitle">Current: 0 Peti</p>
+      <div class="mb-4">
+        <label class="block text-xs font-semibold text-slate-600 mb-1">New Total Stock Count:</label>
+        <input type="number" id="adjustStockInput" min="0" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-center font-black text-lg focus:outline-none focus:border-amber-500">
+      </div>
+      <div class="flex gap-2">
+        <button id="closeAdjustModalBtn" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-xl text-xs transition">Cancel</button>
+        <button id="saveAdjustModalBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl text-xs transition">Update Stock</button>
+      </div>
+    </div>
+  </div>
 
-  <!-- 1. DYNAMIC UPI QR POPUP MODAL -->
+
+  <!-- 1. PURCHASE INWARD MODAL (Maal Aamad) -->
+  <div id="inwardModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-3 border-b pb-2">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-truck-ramp-box text-emerald-600 text-lg"></i>
+          <h3 class="font-bold text-slate-900 text-sm">Record Purchase Inward (Maal Aamad)</h3>
+        </div>
+        <button id="closeInwardModalBtn" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-600 mb-0.5">Supplier / Factory Name:</label>
+            <input type="text" id="inwardSupplier" placeholder="e.g. Morbi Ceramic Works" class="w-full p-1.5 bg-slate-50 border border-slate-300 rounded font-medium">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-0.5">Bilty / Invoice No:</label>
+            <input type="text" id="inwardBilty" placeholder="e.g. MOR-8841" class="w-full p-1.5 bg-slate-50 border border-slate-300 rounded font-mono">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-600 mb-0.5">Select Item:</label>
+          <select id="inwardProductSelect" class="w-full p-1.5 bg-slate-50 border border-slate-300 rounded font-medium">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-600 mb-0.5">Quantity (Peti):</label>
+            <input type="number" id="inwardQty" placeholder="e.g. 1600" class="w-full p-1.5 bg-slate-50 border border-slate-300 rounded font-bold">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-0.5">Landed Cost / Peti:</label>
+            <input type="number" id="inwardCost" placeholder="e.g. 350" class="w-full p-1.5 bg-slate-50 border border-slate-300 rounded font-bold">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-0.5">Freight Paid (₹):</label>
+            <input type="number" id="inwardFreight" placeholder="0" class="w-full p-1.5 bg-slate-50 border border-slate-300 rounded">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-600 mb-0.5">Payment Terms:</label>
+          <select id="inwardPaymentTerms" class="w-full p-1.5 bg-slate-50 border border-slate-300 rounded font-medium">
+            <option value="Paid Cash/Bank">Paid Upfront (Cash / RTGS)</option>
+            <option value="30 Days Credit" selected>30 Days Credit (Morbi Supplier)</option>
+            <option value="60 Days Credit">60 Days Credit</option>
+          </select>
+        </div>
+
+        <button id="saveInwardBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl transition">
+          Add Stock to Godown Inventory
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. ADD OPEX EXPENSE MODAL -->
+  <div id="opexModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-center mb-3 border-b pb-2">
+        <h3 class="font-bold text-slate-900 text-sm">Add Operating Expense (OPEX)</h3>
+        <button id="closeOpexModalBtn" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-600 mb-0.5">Expense Category:</label>
+          <select id="opexCategorySelect" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg font-medium">
+            <option value="Showroom Rent">Showroom Rent (₹1.5L)</option>
+            <option value="Staff Salary">Staff / Helper Salary</option>
+            <option value="Commercial Electricity">Commercial Electricity Bill</option>
+            <option value="Tea & Refreshments">Tea &amp; Hospitality</option>
+            <option value="Maintenance & Cleaning">Maintenance &amp; Cleaning</option>
+            <option value="Diesel & Local Transport">Diesel &amp; Transport</option>
+            <option value="Miscellaneous">Miscellaneous Overheads</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-600 mb-0.5">Amount (₹):</label>
+          <input type="number" id="opexAmount" placeholder="e.g. 150000" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg font-bold text-slate-900">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-600 mb-0.5">Payment Mode:</label>
+          <select id="opexModeSelect" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg">
+            <option value="Bank Transfer / Cheque">Bank Transfer / Cheque</option>
+            <option value="Cash Counter">Cash Counter</option>
+            <option value="UPI">UPI</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-600 mb-0.5">Description / Remarks:</label>
+          <input type="text" id="opexDescription" placeholder="e.g. October Rent paid to landlord" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg">
+        </div>
+
+        <button id="saveOpexBtn" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 rounded-xl transition">
+          Record Expense in P&amp;L
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. CAPITAL & DRAWINGS MODAL -->
+  <div id="capitalModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-center mb-3 border-b pb-2">
+        <h3 class="font-bold text-slate-900 text-sm">Capital or Drawings Entry</h3>
+        <button id="closeCapitalModalBtn" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-600 mb-0.5">Entry Type:</label>
+          <select id="capEntryType" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg font-bold">
+            <option value="Additional Capital">+ Additional Capital Introduced</option>
+            <option value="Drawings">- Owner Personal Drawings (Aaharan)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-600 mb-0.5">Amount (₹):</label>
+          <input type="number" id="capEntryAmount" placeholder="e.g. 100000" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg font-black text-slate-900">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-600 mb-0.5">Notes / Description:</label>
+          <input type="text" id="capEntryNote" placeholder="e.g. Personal fund injection / Monthly home draw" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg">
+        </div>
+
+        <button id="saveCapitalEntryBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded-xl transition">
+          Save Capital Entry
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. ADD BUSINESS LOAN MODAL -->
+  <div id="loanModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-center mb-3 border-b pb-2">
+        <h3 class="font-bold text-slate-900 text-sm">Record Business Loan / Borrowing</h3>
+        <button id="closeLoanModalBtn" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-600 mb-0.5">Lender Name / Bank:</label>
+          <input type="text" id="loanLender" placeholder="e.g. HDFC Bank / Private Lender" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-600 mb-0.5">Principal Loan Amount (₹):</label>
+          <input type="number" id="loanPrincipal" placeholder="e.g. 500000" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg font-bold">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-600 mb-0.5">Interest Rate (% p.a.):</label>
+          <input type="number" id="loanRate" placeholder="e.g. 10.5" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg font-bold">
+        </div>
+
+        <button id="saveLoanBtn" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2 rounded-xl transition">
+          Add Loan to Liabilities
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. MULTI-USER LOGIN / SWITCH MODAL -->
+  <div id="userModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-100 text-center">
+      <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
+        <i class="fa-solid fa-users"></i>
+      </div>
+      <h3 class="font-bold text-slate-900 text-sm mb-1">Select User Profile</h3>
+      <p class="text-xs text-slate-500 mb-4">Switch between Admin &amp; Sales Counter Staff</p>
+
+      <div class="space-y-2 mb-4 text-xs text-left">
+        <button class="user-select-btn w-full p-2.5 rounded-xl border border-slate-200 hover:border-amber-400 hover:bg-amber-50 flex items-center justify-between transition" data-user="Admin (Shivam)">
+          <div class="flex items-center gap-2">
+            <span class="w-7 h-7 rounded-full bg-slate-900 text-amber-400 flex items-center justify-center font-bold text-xs">A</span>
+            <div>
+              <strong class="text-slate-900 block">Admin (Shivam)</strong>
+              <span class="text-[10px] text-slate-500">Full Access (P&amp;L, Capital, Setup)</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
+        </button>
+
+        <button class="user-select-btn w-full p-2.5 rounded-xl border border-slate-200 hover:border-amber-400 hover:bg-amber-50 flex items-center justify-between transition" data-user="Ramesh (Sales Counter)">
+          <div class="flex items-center gap-2">
+            <span class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">S</span>
+            <div>
+              <strong class="text-slate-900 block">Ramesh (Counter Staff)</strong>
+              <span class="text-[10px] text-slate-500">Billing, Orders &amp; Khata</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
+        </button>
+      </div>
+
+      <button id="closeUserModalBtn" class="text-xs text-slate-500 hover:text-slate-800">Cancel</button>
+    </div>
+  </div>
+
+  <!-- 6. DYNAMIC UPI QR POPUP MODAL -->
   <div id="upiModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl text-center border border-slate-100">
       <div class="flex justify-between items-center mb-3">
@@ -274,7 +988,7 @@
     </div>
   </div>
 
-  <!-- 2. QUICK SQ.FT TO PETI CALCULATOR MODAL -->
+  <!-- 7. QUICK SQ.FT TO PETI CALCULATOR MODAL -->
   <div id="calcModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-100">
       <div class="flex justify-between items-center mb-4 border-b pb-2">
@@ -342,59 +1056,7 @@
     </div>
   </div>
 
-  <!-- 3. THEKEDAAR KHATA (UDHAAR / CREDIT LEDGER) MODAL -->
-  <div id="ledgerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-2xl w-full p-5 shadow-2xl border border-slate-100 flex flex-col max-h-[85vh]">
-      <div class="flex justify-between items-center mb-3 border-b pb-2">
-        <div class="flex items-center gap-2">
-          <i class="fa-solid fa-book-bookmark text-emerald-600 text-lg"></i>
-          <div>
-            <h3 class="font-bold text-slate-900 text-sm">Thekedaar &bull; Credit / Udhaar Ledger</h3>
-            <p class="text-[11px] text-slate-500">Track pending balances &amp; settlements</p>
-          </div>
-        </div>
-        <button id="closeLedgerModalBtn" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
-      </div>
-
-      <!-- Ledger Summary Stats -->
-      <div class="grid grid-cols-2 gap-3 mb-3">
-        <div class="bg-rose-50 border border-rose-200 rounded-xl p-2.5">
-          <span class="text-[11px] font-semibold text-rose-700 block">Total Pending Udhaar</span>
-          <strong class="text-lg font-black text-rose-800" id="totalPendingUdhaar">₹0.00</strong>
-        </div>
-        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5">
-          <span class="text-[11px] font-semibold text-emerald-700 block">Active Credit Customers</span>
-          <strong class="text-lg font-black text-emerald-800" id="activeCreditAccounts">0</strong>
-        </div>
-      </div>
-
-      <!-- Ledger Table -->
-      <div class="flex-1 overflow-y-auto border border-slate-200 rounded-xl">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold sticky top-0">
-            <tr>
-              <th class="p-2">Date / Inv</th>
-              <th class="p-2">Thekedaar / Phone</th>
-              <th class="p-2 text-right">Amount</th>
-              <th class="p-2 text-center">Status</th>
-              <th class="p-2 text-center">Action</th>
-            </tr>
-          </thead>
-          <tbody id="ledgerTableBody" class="divide-y divide-slate-100">
-            <!-- Rendered via JS -->
-          </tbody>
-        </table>
-      </div>
-
-      <div class="mt-3 flex justify-end">
-        <button id="closeLedgerBottomBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-4 py-1.5 rounded-lg text-xs transition">
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 4. SETTINGS & INVENTORY MANAGER MODAL -->
+  <!-- 8. SETTINGS & DATA MANAGER MODAL -->
   <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center mb-4 border-b pb-2">
@@ -406,14 +1068,13 @@
       </div>
 
       <div class="space-y-4 text-xs">
-        <!-- Store Profile Settings -->
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
           <h4 class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
             <i class="fa-solid fa-store text-amber-500"></i> Store Info &amp; UPI
           </h4>
           <div>
             <label class="block text-slate-600 mb-0.5 font-medium">Store Display Name:</label>
-            <input type="text" id="settingStoreName" value="SKG TILES & SANITARY STUDIO" class="w-full p-1.5 bg-white border border-slate-300 rounded font-semibold">
+            <input type="text" id="settingStoreName" value="SKG TILES & SANITARY HUB" class="w-full p-1.5 bg-white border border-slate-300 rounded font-semibold">
           </div>
           <div>
             <label class="block text-slate-600 mb-0.5 font-medium">Store Address &amp; Contact:</label>
@@ -425,13 +1086,13 @@
           </div>
         </div>
 
-        <!-- Add New Product Quickly -->
+        <!-- Add New Tile Item -->
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
           <h4 class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-            <i class="fa-solid fa-plus text-emerald-600"></i> Quick Add New Tile / Product
+            <i class="fa-solid fa-plus text-emerald-600"></i> Add New Product / Tile Catalog
           </h4>
           <div class="grid grid-cols-2 gap-2">
-            <input type="text" id="newProdName" placeholder="Item Name (e.g. Onyx White 2x2)" class="p-1.5 bg-white border border-slate-300 rounded">
+            <input type="text" id="newProdName" placeholder="Item Name (e.g. Onyx Blue 2x2)" class="p-1.5 bg-white border border-slate-300 rounded">
             <select id="newProdCat" class="p-1.5 bg-white border border-slate-300 rounded font-medium">
               <option value="12x18 Wall">12"x18" Wall Tiles</option>
               <option value="2x2 Floor">2'x2' Floor Tiles</option>
@@ -442,24 +1103,24 @@
               <option value="Chemicals">Chemicals &amp; Grout</option>
               <option value="Nameplates">Modular Name Plates</option>
             </select>
-            <input type="number" id="newProdB2C" placeholder="B2C Retail Rate (₹)" class="p-1.5 bg-white border border-slate-300 rounded">
+            <input type="number" id="newProdCost" placeholder="Landing Cost Rate (₹)" class="p-1.5 bg-white border border-slate-300 rounded">
             <input type="number" id="newProdB2B" placeholder="B2B Thekedaar Rate (₹)" class="p-1.5 bg-white border border-slate-300 rounded">
-            <input type="number" id="newProdSqft" placeholder="Sq.Ft / Peti (e.g. 16)" class="p-1.5 bg-white border border-slate-300 rounded">
+            <input type="number" id="newProdB2C" placeholder="B2C Retail Rate (₹)" class="p-1.5 bg-white border border-slate-300 rounded">
             <input type="number" id="newProdStock" placeholder="Initial Stock (Peti)" class="p-1.5 bg-white border border-slate-300 rounded">
           </div>
           <button id="addNewProductBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 rounded transition">
-            Add Product to Inventory
+            Add to Inventory Master
           </button>
         </div>
 
-        <!-- Data Backup & Restore -->
+        <!-- Data Backup & Reset -->
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
           <h4 class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-            <i class="fa-solid fa-database text-indigo-600"></i> Backup &amp; Restore
+            <i class="fa-solid fa-database text-indigo-600"></i> Database Backup &amp; Restore
           </h4>
           <div class="flex gap-2">
             <button id="downloadBackupBtn" class="flex-1 bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold py-1.5 rounded hover:bg-indigo-100 transition">
-              <i class="fa-solid fa-download mr-1"></i> Download Backup
+              <i class="fa-solid fa-download mr-1"></i> Download JSON
             </button>
             <button id="resetDemoBtn" class="flex-1 bg-rose-50 border border-rose-200 text-rose-700 font-bold py-1.5 rounded hover:bg-rose-100 transition">
               <i class="fa-solid fa-rotate-left mr-1"></i> Reset Demo Data
@@ -474,23 +1135,23 @@
     </div>
   </div>
 
-  <!-- 5. PRINTABLE INVOICE / CASH MEMO RECEIPT MODAL -->
+  <!-- 9. PRINTABLE RECEIPT / CASH MEMO PREVIEW MODAL -->
   <div id="receiptModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col">
       <div class="flex justify-between items-center mb-3 no-print border-b pb-2">
-        <h3 class="font-bold text-slate-800 text-sm">Receipt Preview</h3>
+        <h3 class="font-bold text-slate-800 text-sm">Receipt / Bill Preview</h3>
         <button id="closeReceiptModalBtn" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
       </div>
 
-      <!-- Printable Area -->
+      <!-- Printable Slip Container -->
       <div id="printableReceipt" class="flex-1 overflow-y-auto text-slate-800 font-mono text-xs border border-dashed border-slate-300 p-4 rounded-xl bg-slate-50">
         <!-- Rendered via JS -->
       </div>
 
-      <!-- Modal Footer -->
+      <!-- Footer Buttons -->
       <div class="mt-4 flex gap-2 no-print">
         <button id="printReceiptBtn" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow">
-          <i class="fa-solid fa-print"></i> Print Receipt / Cash Memo
+          <i class="fa-solid fa-print"></i> Print Cash Memo
         </button>
         <button id="newBillDoneBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition">
           Done &bull; Next Bill
@@ -502,50 +1163,28 @@
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-  <!-- JAVASCRIPT APPLICATION LOGIC -->
+  <!-- ==================== JAVASCRIPT ENGINE ==================== -->
   <script>
-    // --- 1. DEFAULT TILE & SANITARYWARE INVENTORY DATA ---
+    // --- 1. DEFAULT DATA & INVENTORY ---
     const DEFAULT_PRODUCTS = [
-      // 12x18 Wall Tiles (Fast Movers)
-      { id: 'wt-101', name: 'Statuario Marble 12"x18" Wall Set', cat: '12x18 Wall', b2c: 250, b2b: 240, sqftPerPeti: 9, stock: 850, unit: 'Peti' },
-      { id: 'wt-102', name: 'Onyx Aqua Light+Dark 12"x18"', cat: '12x18 Wall', b2c: 260, b2b: 245, sqftPerPeti: 9, stock: 620, unit: 'Peti' },
-      { id: 'wt-103', name: 'Kitchen Subway White 12"x18"', cat: '12x18 Wall', b2c: 245, b2b: 235, sqftPerPeti: 9, stock: 400, unit: 'Peti' },
-      
-      // 2x2 Vitrified Floor Tiles (Fast Movers)
-      { id: 'ft-201', name: 'Royal Statuario 2\'x2\' Vitrified', cat: '2x2 Floor', b2c: 470, b2b: 440, sqftPerPeti: 16, stock: 450, unit: 'Peti' },
-      { id: 'ft-202', name: 'Crema Marfil Beige 2\'x2\' Glossy', cat: '2x2 Floor', b2c: 460, b2b: 435, sqftPerPeti: 16, stock: 380, unit: 'Peti' },
-      { id: 'ft-203', name: 'Cement Grey 2\'x2\' Matte Finish', cat: '2x2 Floor', b2c: 480, b2b: 450, sqftPerPeti: 16, stock: 290, unit: 'Peti' },
-
-      // 2x4 GVT Slabs (600x1200 mm)
-      { id: 'gvt-301', name: 'Armani Gold 2\'x4\' GVT Polished', cat: '2x4 GVT', b2c: 670, b2b: 630, sqftPerPeti: 16, stock: 180, unit: 'Peti' },
-      { id: 'gvt-302', name: 'Nero Portoro Black 2\'x4\' Carving', cat: '2x4 GVT', b2c: 690, b2b: 650, sqftPerPeti: 16, stock: 120, unit: 'Peti' },
-
-      // 16x16 Parking Tiles
-      { id: 'pk-401', name: 'Checker Heavy Duty 16"x16" Parking', cat: '16x16 Parking', b2c: 350, b2b: 330, sqftPerPeti: 8.6, stock: 210, unit: 'Peti' },
-      { id: 'pk-402', name: 'Cobblestone Grey 16"x16" Matte', cat: '16x16 Parking', b2c: 360, b2b: 340, sqftPerPeti: 8.6, stock: 150, unit: 'Peti' },
-
-      // 12x24 Elevation Tiles
-      { id: 'el-501', name: 'Stacked Stone Natural 12"x24"', cat: '12x24 Elevation', b2c: 350, b2b: 330, sqftPerPeti: 9.7, stock: 190, unit: 'Peti' },
-      { id: 'el-502', name: 'Rustic Brick Multi-Color 12"x24"', cat: '12x24 Elevation', b2c: 360, b2b: 335, sqftPerPeti: 9.7, stock: 140, unit: 'Peti' },
-
-      // Sanitaryware & Bath Fittings
-      { id: 'san-601', name: 'Wall-Hung Rimless Commode with Soft Seat', cat: 'Sanitary', b2c: 4800, b2b: 4200, sqftPerPeti: 1, stock: 18, unit: 'Pcs' },
-      { id: 'san-602', name: 'Tabletop Ceramic Basin (White Glossy)', cat: 'Sanitary', b2c: 1650, b2b: 1350, sqftPerPeti: 1, stock: 25, unit: 'Pcs' },
-      { id: 'san-603', name: 'Wall Vanity 24-inch with LED Smart Mirror', cat: 'Sanitary', b2c: 8500, b2b: 7600, sqftPerPeti: 1, stock: 8, unit: 'Set' },
-
-      // Chemicals & Adhesives
-      { id: 'ch-701', name: 'Polymer Tile Adhesive (Type-1) 20kg Bag', cat: 'Chemicals', b2c: 280, b2b: 250, sqftPerPeti: 1, stock: 150, unit: 'Bag' },
-      { id: 'ch-702', name: 'Epoxy Grout (Sparkle 1kg Set)', cat: 'Chemicals', b2c: 550, b2b: 480, sqftPerPeti: 1, stock: 80, unit: 'Pkt' },
-
-      // Modular Name Plates
-      { id: 'np-801', name: 'Designer Laser-Cut Acrylic Modular Nameplate', cat: 'Nameplates', b2c: 2200, b2b: 1800, sqftPerPeti: 1, stock: 20, unit: 'Pcs' }
+      { id: 'p-1', name: 'Statuario White 12"x18" Wall Set', cat: '12x18 Wall', cost: 180, b2b: 240, b2c: 250, sqftPerPeti: 9, stock: 4200, unit: 'Peti' },
+      { id: 'p-2', name: 'Onyx Aqua Blue 12"x18" Wall Set', cat: '12x18 Wall', cost: 180, b2b: 245, b2c: 260, sqftPerPeti: 9, stock: 1500, unit: 'Peti' },
+      { id: 'p-3', name: 'Royal Statuario 2\'x2\' Vitrified Floor', cat: '2x2 Floor', cost: 350, b2b: 440, b2c: 470, sqftPerPeti: 16, stock: 1600, unit: 'Peti' },
+      { id: 'p-4', name: 'Crema Marfil Beige 2\'x2\' Glossy', cat: '2x2 Floor', cost: 350, b2b: 435, b2c: 460, sqftPerPeti: 16, stock: 800, unit: 'Peti' },
+      { id: 'p-5', name: 'Armani Gold 2\'x4\' GVT Polished Slab', cat: '2x4 GVT', cost: 500, b2b: 630, b2c: 670, sqftPerPeti: 16, stock: 850, unit: 'Peti' },
+      { id: 'p-6', name: 'Checker Heavy Duty 16"x16" Parking', cat: '16x16 Parking', cost: 250, b2b: 330, b2c: 350, sqftPerPeti: 8.6, stock: 1500, unit: 'Peti' },
+      { id: 'p-7', name: 'Stacked Stone Natural 12"x24" Elevation', cat: '12x24 Elevation', cost: 240, b2b: 330, b2c: 350, sqftPerPeti: 9.7, stock: 1400, unit: 'Peti' },
+      { id: 'p-8', name: 'Wall-Hung Rimless Commode + Soft Seat', cat: 'Sanitary', cost: 3200, b2b: 4200, b2c: 4800, sqftPerPeti: 1, stock: 25, unit: 'Pcs' },
+      { id: 'p-9', name: 'Tabletop Ceramic Basin (White)', cat: 'Sanitary', cost: 950, b2b: 1350, b2c: 1650, sqftPerPeti: 1, stock: 40, unit: 'Pcs' },
+      { id: 'p-10', name: 'Polymer Tile Adhesive (Type-1) 20kg', cat: 'Chemicals', cost: 190, b2b: 250, b2c: 280, sqftPerPeti: 1, stock: 250, unit: 'Bag' },
+      { id: 'p-11', name: 'Designer Laser-Cut Acrylic Modular Nameplate', cat: 'Nameplates', cost: 1100, b2b: 1800, b2c: 2200, sqftPerPeti: 1, stock: 35, unit: 'Pcs' }
     ];
 
     const CATEGORIES = [
       { id: 'all', name: 'All Products' },
       { id: '12x18 Wall', name: '12"x18" Wall' },
       { id: '2x2 Floor', name: '2\'x2\' Floor' },
-      { id: '2x4 GVT', name: '2\'x4\' GVT' },
+      { id: '2x4 GVT', name: '2\'x4\' GVT Slabs' },
       { id: '16x16 Parking', name: '16"x16" Parking' },
       { id: '12x24 Elevation', name: '12"x24" Elevation' },
       { id: 'Sanitary', name: 'Sanitary & Bath' },
@@ -553,56 +1192,63 @@
       { id: 'Nameplates', name: 'Modular Name Plates' }
     ];
 
-    // --- 2. APPLICATION STATE ---
+    // --- 2. STATE MANAGEMENT ---
     let appState = {
       products: [],
-      cart: [], // items: { id, name, cat, unit, sqftPerPeti, qty, defaultPrice, customPrice }
+      cart: [], // { id, name, cat, unit, sqftPerPeti, qty, defaultPrice, customPrice, cost }
       currentTier: 'b2c', // 'b2c' | 'b2b'
       selectedCategory: 'all',
       searchQuery: '',
       discount: 0,
-      discountType: 'flat', // 'flat' | 'percent'
+      discountType: 'flat',
       taxRate: 18,
+      freightCharge: 0,
+      laborCharge: 0,
+      orderType: 'Direct Sale', // 'Direct Sale' | 'Advance Order'
       paymentMode: 'Cash',
-      storeName: 'SKG TILES & SANITARY STUDIO',
+      currentUser: 'Admin (Shivam)',
+      storeName: 'SKG TILES & SANITARY HUB',
       storeAddr: 'Burari Main Road, Delhi • Ph: +91 98765 43210',
       upiId: 'skgtiles@upi',
-      ledger: [] // { inv, date, customer, phone, amount, status: 'Pending'|'Settled' }
+      orders: [], // { orderId, date, deliveryDate, site, customer, phone, items, total, advance, balance, status }
+      sales: [], // { inv, date, customer, phone, items, subtotal, tax, freight, discount, total, paid, balance, mode, cogs, profit }
+      opex: [], // { id, date, category, desc, mode, amount }
+      capital: {
+        opening: 2000000, // 20 Lakhs
+        additional: 0,
+        drawings: 0,
+        interestRate: 12, // 12% p.a.
+        transactions: [] // { date, type, note, amount }
+      },
+      loans: [] // { id, lender, principal, rate, paid, balance }
     };
 
-    // --- 3. STORAGE HELPERS ---
-    function loadFromStorage() {
+    // --- 3. STORAGE & TOASTS ---
+    function loadStorage() {
       try {
-        const storedProducts = localStorage.getItem('skg_tiles_products');
-        appState.products = storedProducts ? JSON.parse(storedProducts) : DEFAULT_PRODUCTS;
-        
-        const storedStore = localStorage.getItem('skg_tiles_store');
-        if (storedStore) {
-          const s = JSON.parse(storedStore);
-          appState.storeName = s.storeName || appState.storeName;
-          appState.storeAddr = s.storeAddr || appState.storeAddr;
-          appState.upiId = s.upiId || appState.upiId;
+        const stored = localStorage.getItem('skg_tiles_hub_db');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          appState = { ...appState, ...parsed };
+        } else {
+          appState.products = DEFAULT_PRODUCTS;
+          // Seed sample OPEX for demonstration
+          appState.opex = [
+            { id: 'op-1', date: '18/10/2026', category: 'Showroom Rent', desc: 'Advance Rent for Showroom & Godown', mode: 'Bank Transfer', amount: 150000 },
+            { id: 'op-2', date: '18/10/2026', category: 'Commercial Electricity', desc: 'Commercial Meter Bill', mode: 'UPI', amount: 12500 }
+          ];
         }
-
-        const storedLedger = localStorage.getItem('skg_tiles_ledger');
-        appState.ledger = storedLedger ? JSON.parse(storedLedger) : [];
       } catch (e) {
-        console.warn('LocalStorage error, using defaults', e);
+        console.warn('Storage error', e);
         appState.products = DEFAULT_PRODUCTS;
       }
     }
 
-    function saveToStorage() {
+    function saveStorage() {
       try {
-        localStorage.setItem('skg_tiles_products', JSON.stringify(appState.products));
-        localStorage.setItem('skg_tiles_store', JSON.stringify({
-          storeName: appState.storeName,
-          storeAddr: appState.storeAddr,
-          upiId: appState.upiId
-        }));
-        localStorage.setItem('skg_tiles_ledger', JSON.stringify(appState.ledger));
+        localStorage.setItem('skg_tiles_hub_db', JSON.stringify(appState));
       } catch (e) {
-        console.warn('LocalStorage save error', e);
+        console.warn('Save error', e);
       }
     }
 
@@ -614,7 +1260,7 @@
         error: 'bg-rose-600 text-white',
         info: 'bg-slate-900 text-white'
       };
-      toast.className = `${colors[type] || colors.info} px-3 py-2 rounded-lg text-xs shadow-lg flex items-center gap-2 transform transition-all duration-300 pointer-events-auto`;
+      toast.className = `${colors[type] || colors.info} px-3.5 py-2 rounded-xl text-xs shadow-xl flex items-center gap-2 transform transition-all duration-300 pointer-events-auto border border-white/20`;
       toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${msg}</span>`;
       container.appendChild(toast);
       setTimeout(() => {
@@ -623,14 +1269,56 @@
       }, 2500);
     }
 
-    // --- 4. UI RENDERING: PRODUCTS & CATEGORIES ---
+    // --- 4. VIEW NAVIGATION SWITCHER ---
+    function switchView(viewName) {
+      const views = ['viewBilling', 'viewStock', 'viewOrders', 'viewReports', 'viewOpex', 'viewCapital', 'viewLedger'];
+      views.forEach(v => {
+        const el = document.getElementById(v);
+        if (el) el.classList.add('hidden');
+      });
+
+      const activeView = document.getElementById(viewName);
+      if (activeView) activeView.classList.remove('hidden');
+
+      // Update button highlights
+      const navMap = {
+        'viewBilling': 'navBillingBtn',
+        'viewStock': 'navStockBtn',
+        'viewOrders': 'navOrdersBtn',
+        'viewReports': 'navReportsBtn',
+        'viewOpex': 'navOpexBtn',
+        'viewCapital': 'navCapitalBtn',
+        'viewLedger': 'navLedgerBtn'
+      };
+
+      Object.entries(navMap).forEach(([v, btnId]) => {
+        const btn = document.getElementById(btnId);
+        if (btn) {
+          if (v === viewName) {
+            btn.className = "bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow transition";
+          } else {
+            btn.className = "bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition";
+          }
+        }
+      });
+
+      // Refresh data on switch
+      if (viewName === 'viewStock') renderStockTable();
+      if (viewName === 'viewOrders') renderOrdersTable();
+      if (viewName === 'viewReports') renderReports();
+      if (viewName === 'viewOpex') renderOpexTable();
+      if (viewName === 'viewCapital') renderCapitalDashboard();
+      if (viewName === 'viewLedger') renderLedgerTable();
+    }
+
+    // --- 5. PRODUCT CATALOG & SEARCH ---
     function renderCategoryPills() {
-      const pillsContainer = document.getElementById('categoryPills');
-      pillsContainer.innerHTML = '';
+      const container = document.getElementById('categoryPills');
+      container.innerHTML = '';
       CATEGORIES.forEach(cat => {
         const isActive = appState.selectedCategory === cat.id;
         const btn = document.createElement('button');
-        btn.className = `px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition ${
+        btn.className = `px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition ${
           isActive 
             ? 'bg-slate-900 text-amber-400 border border-slate-900 shadow-sm' 
             : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
@@ -641,7 +1329,7 @@
           renderCategoryPills();
           renderProductGrid();
         });
-        pillsContainer.appendChild(btn);
+        container.appendChild(btn);
       });
     }
 
@@ -660,7 +1348,7 @@
       document.getElementById('currentTierLabel').textContent = appState.currentTier === 'b2c' ? 'B2C Retail Rate' : 'B2B Thekedaar Rate';
 
       if (filtered.length === 0) {
-        grid.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400 text-xs">No matching tiles found for "${appState.searchQuery}"</div>`;
+        grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400 text-xs">No matching tiles found for "${appState.searchQuery}"</div>`;
         return;
       }
 
@@ -671,26 +1359,26 @@
 
         const card = document.createElement('div');
         card.className = "bg-white border border-slate-200 rounded-xl p-2.5 flex flex-col justify-between hover:border-amber-400 hover:shadow-md transition cursor-pointer select-none group";
-        
+
         card.innerHTML = `
           <div>
             <div class="flex items-center justify-between text-[10px] text-slate-500 mb-1">
-              <span class="bg-slate-100 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider text-slate-600">${p.cat}</span>
-              <span class="${p.stock < 50 ? 'text-rose-600 font-bold' : 'text-emerald-700 font-medium'}">${p.stock} ${p.unit}</span>
+              <span class="bg-slate-100 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider text-slate-700">${p.cat}</span>
+              <span class="${p.stock < 50 ? 'text-rose-600 font-bold bg-rose-50 px-1 rounded' : 'text-emerald-700 font-semibold'}">${p.stock} in stock</span>
             </div>
             <h4 class="font-bold text-slate-800 text-xs leading-snug group-hover:text-amber-600 transition mb-1 line-clamp-2">${p.name}</h4>
             <div class="text-[11px] text-slate-400 mb-2">
-              ${p.unit === 'Peti' ? `<i class="fa-solid fa-layer-group text-[9px] mr-1"></i>${p.sqftPerPeti} Sq.Ft / Peti` : `<i class="fa-solid fa-box text-[9px] mr-1"></i>Standard Unit`}
+              ${p.unit === 'Peti' ? `<i class="fa-solid fa-layer-group text-[9px] mr-1"></i>${p.sqftPerPeti} Sq.Ft / Peti` : `<i class="fa-solid fa-box text-[9px] mr-1"></i>${p.unit}`}
             </div>
           </div>
 
-          <div class="border-t border-slate-100 pt-2 flex items-center justify-between mt-auto">
+          <div class="border-t border-slate-100 pt-1.5 flex items-center justify-between mt-auto">
             <div>
               <div class="text-xs font-black text-slate-900">₹${price} <span class="text-[10px] font-normal text-slate-500">/${p.unit}</span></div>
               <div class="text-[9px] text-slate-400">${otherLabel}</div>
             </div>
-            <button class="bg-amber-50 group-hover:bg-amber-500 text-amber-700 group-hover:text-slate-950 font-bold w-7 h-7 rounded-lg flex items-center justify-center text-xs transition">
-              <i class="fa-solid fa-plus"></i>
+            <button class="bg-amber-50 group-hover:bg-amber-500 text-amber-700 group-hover:text-slate-950 font-bold w-6 h-6 rounded-lg flex items-center justify-center text-xs transition">
+              <i class="fa-solid fa-plus text-[10px]"></i>
             </button>
           </div>
         `;
@@ -700,10 +1388,10 @@
       });
     }
 
-    // --- 5. CART & DYNAMIC PRICING ENGINE ---
+    // --- 6. CART WITH DIRECT QUANTITY INPUT + DYNAMIC PRICING ---
     function addToCart(product) {
       const defaultRate = appState.currentTier === 'b2c' ? product.b2c : product.b2b;
-      const existing = appState.cart.find(item => item.id === product.id);
+      const existing = appState.cart.find(i => i.id === product.id);
 
       if (existing) {
         existing.qty += 1;
@@ -714,6 +1402,7 @@
           cat: product.cat,
           unit: product.unit,
           sqftPerPeti: product.sqftPerPeti || 1,
+          cost: product.cost || 0,
           qty: 1,
           defaultPrice: defaultRate,
           customPrice: defaultRate // Editable on the fly!
@@ -723,23 +1412,21 @@
       showToast(`Added ${product.name}`, 'info');
     }
 
+    function updateCartDirectQty(id, newQty) {
+      const item = appState.cart.find(i => i.id === id);
+      if (item) {
+        const val = parseInt(newQty);
+        item.qty = isNaN(val) || val < 1 ? 1 : val;
+        renderCartTotals();
+      }
+    }
+
     function updateCartItemPrice(id, newPrice) {
       const item = appState.cart.find(i => i.id === id);
       if (item) {
         const val = parseFloat(newPrice);
         item.customPrice = isNaN(val) || val < 0 ? 0 : val;
         renderCartTotals();
-      }
-    }
-
-    function updateCartItemQty(id, delta) {
-      const item = appState.cart.find(i => i.id === id);
-      if (item) {
-        item.qty += delta;
-        if (item.qty <= 0) {
-          appState.cart = appState.cart.filter(i => i.id !== id);
-        }
-        renderCart();
       }
     }
 
@@ -775,7 +1462,7 @@
             <div class="flex-1 min-w-0">
               <h5 class="text-xs font-bold text-slate-800 truncate">${item.name}</h5>
               <div class="text-[10px] text-slate-400">
-                ${item.unit === 'Peti' ? `${item.qty} Peti = <strong class="text-slate-600 font-semibold">${totalItemSqft} Sq.Ft</strong>` : `${item.qty} ${item.unit}`}
+                ${item.unit === 'Peti' ? `${item.qty} Peti &bull; <strong class="text-slate-600 font-semibold">${totalItemSqft} Sq.Ft</strong>` : `${item.qty} ${item.unit}`}
               </div>
             </div>
             <button class="remove-item-btn text-slate-400 hover:text-rose-600 text-xs p-1" title="Remove">
@@ -783,39 +1470,41 @@
             </button>
           </div>
 
-          <!-- Dynamic Rate & Qty Controls Row -->
-          <div class="flex items-center justify-between gap-2 bg-slate-50 p-1.5 rounded-lg border border-slate-200">
-            <!-- Quantity adjusters -->
+          <div class="flex items-center justify-between gap-1.5 bg-slate-50 p-1.5 rounded-lg border border-slate-200">
+            <!-- DIRECT QUANTITY INPUT (Change to 100 with 1 click!) -->
             <div class="flex items-center gap-1">
-              <button class="qty-minus-btn w-6 h-6 rounded bg-white border border-slate-300 text-slate-700 flex items-center justify-center font-bold text-xs hover:bg-slate-100">-</button>
-              <span class="w-8 text-center font-bold text-xs text-slate-900">${item.qty}</span>
-              <button class="qty-plus-btn w-6 h-6 rounded bg-white border border-slate-300 text-slate-700 flex items-center justify-center font-bold text-xs hover:bg-slate-100">+</button>
-              <span class="text-[10px] text-slate-500 ml-1">${item.unit}</span>
+              <span class="text-[10px] font-semibold text-slate-500">Qty:</span>
+              <input type="number" min="1" value="${item.qty}" 
+                     class="item-qty-input w-16 px-1.5 py-0.5 text-center bg-white border border-slate-300 rounded text-xs font-black text-slate-900 focus:outline-none focus:border-amber-500 shadow-sm"
+                     title="Type quantity directly (e.g. 50, 100, 500)">
+              <span class="text-[10px] text-slate-500">${item.unit}</span>
             </div>
 
             <!-- DYNAMIC PRICING FIELD (Instant Custom Rate per Peti) -->
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1">
               <span class="text-[10px] font-semibold text-slate-500">Rate: ₹</span>
               <input type="number" value="${item.customPrice}" step="any" min="0" 
-                     class="item-price-input w-20 px-1.5 py-0.5 text-right bg-white border border-amber-300 rounded text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500 shadow-sm"
-                     title="Click to override rate on the fly!">
+                     class="item-price-input w-16 px-1.5 py-0.5 text-right bg-white border border-amber-300 rounded text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500 shadow-sm"
+                     title="Negotiated custom rate per box">
             </div>
 
             <!-- Line Total -->
-            <div class="text-right font-black text-xs text-slate-900 w-16">
+            <div class="text-right font-black text-xs text-slate-900 min-w-16">
               ₹${itemTotal}
             </div>
           </div>
         `;
 
-        // Bind Row Handlers
+        // Bind Controls
         row.querySelector('.remove-item-btn').addEventListener('click', () => removeCartItem(item.id));
-        row.querySelector('.qty-minus-btn').addEventListener('click', () => updateCartItemQty(item.id, -1));
-        row.querySelector('.qty-plus-btn').addEventListener('click', () => updateCartItemQty(item.id, 1));
         
+        const qtyInput = row.querySelector('.item-qty-input');
+        qtyInput.addEventListener('input', (e) => updateCartDirectQty(item.id, e.target.value));
+        qtyInput.addEventListener('change', () => renderCart());
+
         const priceInput = row.querySelector('.item-price-input');
         priceInput.addEventListener('input', (e) => updateCartItemPrice(item.id, e.target.value));
-        priceInput.addEventListener('change', () => renderCart()); // Re-render on blur to format totals
+        priceInput.addEventListener('change', () => renderCart());
 
         container.appendChild(row);
       });
@@ -823,14 +1512,20 @@
       renderCartTotals();
     }
 
-    function calculateTotals() {
+    function calculateBillingTotals() {
       let subtotal = 0;
       let totalPeti = 0;
+      let totalCogs = 0;
 
       appState.cart.forEach(item => {
         subtotal += item.qty * item.customPrice;
+        totalCogs += item.qty * item.cost;
         if (item.unit === 'Peti') totalPeti += item.qty;
       });
+
+      const freight = appState.freightCharge || 0;
+      const labor = appState.laborCharge || 0;
+      const totalFreightAndLabor = freight + labor;
 
       // Discount
       let discountAmt = 0;
@@ -843,112 +1538,145 @@
 
       const afterDiscount = Math.max(0, subtotal - discountAmt);
 
-      // Tax
+      // Tax (applied on products)
       const taxAmt = (afterDiscount * appState.taxRate) / 100;
-      const grandTotal = afterDiscount + taxAmt;
 
-      return { subtotal, totalPeti, discountAmt, afterDiscount, taxAmt, grandTotal };
+      // Grand Total = Products after discount + Tax + Freight + Labor
+      const grandTotal = afterDiscount + taxAmt + totalFreightAndLabor;
+
+      return { subtotal, totalPeti, totalCogs, totalFreightAndLabor, discountAmt, taxAmt, grandTotal };
     }
 
     function renderCartTotals() {
-      const { subtotal, totalPeti, discountAmt, taxAmt, grandTotal } = calculateTotals();
+      const { subtotal, totalPeti, totalFreightAndLabor, discountAmt, taxAmt, grandTotal } = calculateBillingTotals();
 
       document.getElementById('totalPetiCount').textContent = totalPeti;
       document.getElementById('subtotalDisplay').textContent = `₹${subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById('freightTotalDisplay').textContent = `₹${totalFreightAndLabor.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       document.getElementById('discountDisplay').textContent = `-₹${discountAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       document.getElementById('taxRateLabel').textContent = `${appState.taxRate}%`;
       document.getElementById('taxDisplay').textContent = `₹${taxAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       document.getElementById('grandTotalDisplay').textContent = `₹${grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+      // Update Part Payment Calculation
+      updatePartPaymentCalculations(grandTotal);
     }
 
-    // --- 6. DYNAMIC UPI QR GENERATOR ---
-    function openUpiQrModal() {
-      const { grandTotal } = calculateTotals();
-      if (grandTotal <= 0) {
-        showToast('Cart is empty! Add items first.', 'error');
-        return;
+    function updatePartPaymentCalculations(grandTotal) {
+      const paidInput = document.getElementById('partPaidAmount');
+      let paid = parseFloat(paidInput.value) || 0;
+      
+      if (appState.paymentMode === 'Udhaar') {
+        paid = 0;
+        paidInput.value = 0;
       }
 
-      document.getElementById('upiModalAmount').textContent = `₹${grandTotal.toFixed(2)}`;
-      document.getElementById('upiModalVpa').textContent = appState.upiId;
-
-      const container = document.getElementById('upiQrCodeContainer');
-      container.innerHTML = '';
-
-      // Format standard NPCI UPI Intent URI: upi://pay?pa=VPA&pn=NAME&am=AMOUNT&cu=INR&tn=INVOICE
-      const inv = document.getElementById('invoiceNumber').textContent;
-      const upiUrl = `upi://pay?pa=${encodeURIComponent(appState.upiId)}&pn=${encodeURIComponent(appState.storeName)}&am=${grandTotal.toFixed(2)}&cu=INR&tn=${encodeURIComponent('Bill ' + inv)}`;
-
-      new QRCode(container, {
-        text: upiUrl,
-        width: 180,
-        height: 180,
-        colorDark: '#0f172a',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.M
-      });
-
-      document.getElementById('upiModal').classList.remove('hidden');
+      const balance = Math.max(0, grandTotal - paid);
+      document.getElementById('remainingBalanceDisplay').textContent = `₹${balance.toFixed(2)}`;
     }
 
-    // --- 7. BILL GENERATION & RECEIPT PRINTING ---
-    function generateBill() {
+    // --- 7. ORDER BOOKING & INVOICING LOGIC ---
+    function processTransaction() {
       if (appState.cart.length === 0) {
-        showToast('Cart is empty! Please add products.', 'error');
+        showToast('Cart is empty! Add tiles first.', 'error');
         return;
       }
 
-      const { subtotal, discountAmt, taxAmt, grandTotal } = calculateTotals();
+      const { subtotal, totalCogs, totalFreightAndLabor, discountAmt, taxAmt, grandTotal } = calculateBillingTotals();
       const inv = document.getElementById('invoiceNumber').textContent;
       const custName = document.getElementById('custNameInput').value.trim() || 'Walk-in Customer';
       const custPhone = document.getElementById('custPhoneInput').value.trim() || 'N/A';
+      
+      let paidAmt = parseFloat(document.getElementById('partPaidAmount').value) || 0;
+      if (appState.paymentMode === 'Udhaar') paidAmt = 0;
+      if (paidAmt > grandTotal) paidAmt = grandTotal;
+      const balanceAmt = Math.max(0, grandTotal - paidAmt);
+
       const now = new Date();
       const dateStr = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
 
-      // If Udhaar payment mode, log to Ledger
-      if (appState.paymentMode === 'Udhaar') {
-        appState.ledger.unshift({
-          inv: inv,
+      // CASE A: ADVANCE ORDER BOOKING
+      if (appState.orderType === 'Advance Order') {
+        const delDate = document.getElementById('orderDeliveryDate').value || 'TBD';
+        const siteLoc = document.getElementById('orderSiteLocation').value || 'Burari Site';
+
+        appState.orders.unshift({
+          orderId: 'ORD-' + Math.floor(1000 + Math.random() * 9000),
           date: now.toLocaleDateString('en-IN'),
+          deliveryDate: delDate,
+          site: siteLoc,
           customer: custName,
           phone: custPhone,
-          amount: grandTotal,
-          status: 'Pending'
+          items: [...appState.cart],
+          total: grandTotal,
+          advance: paidAmt,
+          balance: balanceAmt,
+          status: 'Booked'
         });
-        saveToStorage();
-        updateLedgerCount();
-        showToast(`Bill marked as Udhaar for ${custName}`, 'info');
+
+        saveStorage();
+        updateActiveOrdersBadge();
+        showToast(`Order booked! Advance: ₹${paidAmt}`, 'success');
+        renderReceiptModal(inv, custName, custPhone, dateStr, subtotal, discountAmt, taxAmt, totalFreightAndLabor, grandTotal, paidAmt, balanceAmt, 'Order Booking');
+        return;
       }
 
-      // Deduct Stock
-      appState.cart.forEach(cartItem => {
-        const prod = appState.products.find(p => p.id === cartItem.id);
-        if (prod) {
-          prod.stock = Math.max(0, prod.stock - cartItem.qty);
-        }
-      });
-      saveToStorage();
-      renderProductGrid();
+      // CASE B: DIRECT INVOICE BILLING
+      // Calculate profit
+      const grossProfit = (subtotal - discountAmt) - totalCogs;
 
-      // Build Printable Receipt HTML
-      const receiptContainer = document.getElementById('printableReceipt');
-      
-      let itemsTableRows = '';
+      // Deduct Live Stock
+      appState.cart.forEach(item => {
+        const p = appState.products.find(prod => prod.id === item.id);
+        if (p) p.stock = Math.max(0, p.stock - item.qty);
+      });
+
+      // Record in Sales History
+      appState.sales.unshift({
+        inv: inv,
+        date: dateStr,
+        customer: custName,
+        phone: custPhone,
+        items: [...appState.cart],
+        subtotal: subtotal,
+        discount: discountAmt,
+        tax: taxAmt,
+        freight: totalFreightAndLabor,
+        total: grandTotal,
+        paid: paidAmt,
+        balance: balanceAmt,
+        mode: appState.paymentMode,
+        cogs: totalCogs,
+        profit: grossProfit
+      });
+
+      saveStorage();
+      renderProductGrid();
+      updateLedgerCount();
+
+      showToast(`Bill generated successfully!`, 'success');
+      renderReceiptModal(inv, custName, custPhone, dateStr, subtotal, discountAmt, taxAmt, totalFreightAndLabor, grandTotal, paidAmt, balanceAmt, appState.paymentMode);
+    }
+
+    function renderReceiptModal(inv, custName, custPhone, dateStr, subtotal, discountAmt, taxAmt, freight, grandTotal, paid, balance, mode) {
+      const container = document.getElementById('printableReceipt');
+
+      let itemRows = '';
       appState.cart.forEach((it, idx) => {
-        const lineTotal = (it.qty * it.customPrice).toFixed(2);
-        itemsTableRows += `
+        const itemLineTotal = (it.qty * it.customPrice).toFixed(2);
+        itemRows += `
           <tr>
             <td style="padding: 4px 0;">${idx+1}. ${it.name}<br><small style="color: #64748b;">${it.qty} ${it.unit} @ ₹${it.customPrice}</small></td>
-            <td style="text-align: right; vertical-align: top; padding: 4px 0;">₹${lineTotal}</td>
+            <td style="text-align: right; vertical-align: top; padding: 4px 0;">₹${itemLineTotal}</td>
           </tr>
         `;
       });
 
-      receiptContainer.innerHTML = `
+      container.innerHTML = `
         <div style="text-align: center; border-bottom: 1px dashed #cbd5e1; padding-bottom: 8px; margin-bottom: 8px;">
           <h2 style="font-size: 14px; font-weight: bold; margin: 0; text-transform: uppercase;">${appState.storeName}</h2>
           <p style="font-size: 10px; margin: 2px 0; color: #475569;">${appState.storeAddr}</p>
-          <p style="font-size: 10px; margin: 2px 0; font-weight: bold;">CASH MEMO / RETAIL INVOICE</p>
+          <p style="font-size: 10px; margin: 2px 0; font-weight: bold; color: #0284c7;">RETAIL CASH MEMO / TAX INVOICE</p>
         </div>
 
         <div style="display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 8px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 6px;">
@@ -970,7 +1698,7 @@
             </tr>
           </thead>
           <tbody>
-            ${itemsTableRows}
+            ${itemRows}
           </tbody>
         </table>
 
@@ -979,6 +1707,11 @@
             <span>Subtotal:</span>
             <span>₹${subtotal.toFixed(2)}</span>
           </div>
+          ${freight > 0 ? `
+          <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+            <span>Freight &amp; Palledari:</span>
+            <span>₹${freight.toFixed(2)}</span>
+          </div>` : ''}
           ${discountAmt > 0 ? `
           <div style="display: flex; justify-content: space-between; margin-bottom: 2px; color: #e11d48;">
             <span>Discount:</span>
@@ -990,43 +1723,328 @@
             <span>₹${taxAmt.toFixed(2)}</span>
           </div>` : ''}
           <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; border-top: 1px solid #0f172a; padding-top: 4px; margin-top: 4px;">
-            <span>Grand Total:</span>
+            <span>Grand Net Total:</span>
             <span>₹${grandTotal.toFixed(2)}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; font-size: 10px; margin-top: 4px; color: #475569;">
-            <span>Payment Mode:</span>
-            <span style="font-weight: bold;">${appState.paymentMode}</span>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-top: 4px; color: #059669; font-weight: bold;">
+            <span>Paid Amount (${mode}):</span>
+            <span>₹${paid.toFixed(2)}</span>
           </div>
+          ${balance > 0 ? `
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-top: 2px; color: #e11d48; font-weight: bold;">
+            <span>Pending Balance (Udhaar):</span>
+            <span>₹${balance.toFixed(2)}</span>
+          </div>` : ''}
         </div>
 
         <div style="text-align: center; margin-top: 12px; font-size: 9px; color: #64748b; border-top: 1px dashed #cbd5e1; padding-top: 6px;">
           <p style="margin: 2px 0;">* Check breakage before unloading. No returns after 7 days *</p>
-          <p style="margin: 2px 0; font-weight: bold;">Thank You for Visiting SKG Tiles!</p>
+          <p style="margin: 2px 0; font-weight: bold;">Thank You for Shopping at SKG Tiles!</p>
         </div>
       `;
 
       document.getElementById('receiptModal').classList.remove('hidden');
     }
 
-    function resetCartForNextBill() {
+    function resetCartForNext() {
       appState.cart = [];
       document.getElementById('custNameInput').value = '';
       document.getElementById('custPhoneInput').value = '';
       document.getElementById('discountInput').value = '0';
-      
-      // Generate Next Sequential Invoice
+      document.getElementById('freightInput').value = '0';
+      document.getElementById('laborInput').value = '0';
+      document.getElementById('partPaidAmount').value = '0';
+      appState.freightCharge = 0;
+      appState.laborCharge = 0;
+
       const randNum = Math.floor(100 + Math.random() * 900);
-      document.getElementById('invoiceNumber').textContent = `SKG-2026-${randNum}`;
-      
+      document.getElementById('invoiceNumber').textContent = `INV-2026-${randNum}`;
+
       renderCart();
       document.getElementById('receiptModal').classList.add('hidden');
-      showToast('Ready for next customer!', 'success');
     }
 
-    // --- 8. UDHAAR / LEDGER CONTROLS ---
+    // --- 8. REPORTS & P&L DASHBOARD ENGINE ---
+    function renderReports() {
+      let salesFiltered = appState.sales;
+      const filter = document.getElementById('reportPeriodFilter').value;
+
+      if (filter === 'today') {
+        const todayStr = new Date().toLocaleDateString('en-IN');
+        salesFiltered = salesFiltered.filter(s => s.date.includes(todayStr));
+      }
+
+      let totalSales = 0;
+      let totalCogs = 0;
+      let totalGrossProfit = 0;
+
+      salesFiltered.forEach(s => {
+        totalSales += s.total;
+        totalCogs += s.cogs;
+        totalGrossProfit += s.profit;
+      });
+
+      // Total OPEX
+      let totalOpex = 0;
+      appState.opex.forEach(op => totalOpex += op.amount);
+
+      const netInHand = totalGrossProfit - totalOpex;
+
+      document.getElementById('repTotalSales').textContent = `₹${totalSales.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+      document.getElementById('repTotalCogs').textContent = `₹${totalCogs.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+      document.getElementById('repGrossProfit').textContent = `₹${totalGrossProfit.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+      document.getElementById('repTotalOpex').textContent = `₹${totalOpex.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+      document.getElementById('repNetProfit').textContent = `₹${netInHand.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+
+      // Render Sales Table
+      const tbody = document.getElementById('salesHistoryTableBody');
+      tbody.innerHTML = '';
+
+      if (salesFiltered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">No sales transactions found for this period.</td></tr>`;
+        return;
+      }
+
+      salesFiltered.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition";
+        tr.innerHTML = `
+          <td class="p-2.5 font-bold text-slate-900">${s.inv}</td>
+          <td class="p-2.5 text-slate-500">${s.date}</td>
+          <td class="p-2.5">
+            <strong>${s.customer}</strong> <span class="text-[10px] bg-slate-100 text-slate-600 px-1 rounded">${s.mode}</span>
+          </td>
+          <td class="p-2.5 text-right font-black text-slate-900">₹${s.total.toFixed(2)}</td>
+          <td class="p-2.5 text-right font-bold text-emerald-600">₹${s.paid.toFixed(2)}</td>
+          <td class="p-2.5 text-right font-bold ${s.balance > 0 ? 'text-rose-600' : 'text-slate-400'}">₹${s.balance.toFixed(2)}</td>
+          <td class="p-2.5 text-right font-black text-cyan-700">₹${s.profit.toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // --- 9. LIVE STOCK & PURCHASE INWARDS ENGINE ---
+    function renderStockTable() {
+      const tbody = document.getElementById('stockTableBody');
+      tbody.innerHTML = '';
+
+      let totalPeti = 0;
+      let totalCostVal = 0;
+      let totalRetailVal = 0;
+      let lowCount = 0;
+
+      appState.products.forEach(p => {
+        if (p.unit === 'Peti') totalPeti += p.stock;
+        totalCostVal += p.stock * p.cost;
+        totalRetailVal += p.stock * p.b2c;
+        if (p.stock < 50) lowCount++;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition";
+        tr.innerHTML = `
+          <td class="p-2.5 font-bold text-slate-900">${p.name}</td>
+          <td class="p-2.5 text-slate-500"><span class="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-semibold">${p.cat}</span></td>
+          <td class="p-2.5 text-right font-semibold text-slate-700">₹${p.cost}</td>
+          <td class="p-2.5 text-right font-semibold text-slate-700">₹${p.b2b}</td>
+          <td class="p-2.5 text-right font-black text-slate-900">₹${p.b2c}</td>
+          <td class="p-2.5 text-center">
+            <span class="px-2 py-0.5 rounded-full font-bold text-[11px] ${p.stock < 50 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-800'}">
+              ${p.stock} ${p.unit}
+            </span>
+          </td>
+          <td class="p-2.5 text-center">
+            <button class="add-stock-btn bg-slate-100 hover:bg-slate-200 text-slate-800 px-2 py-1 rounded text-[11px] font-bold transition">
+              Adjust
+            </button>
+          </td>
+        `;
+
+        const adjustBtn = tr.querySelector('.add-stock-btn');
+        adjustBtn.addEventListener('click', () => {
+          openStockAdjustModal(p);
+        });
+
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('stockTotalPetiCount').textContent = `${totalPeti.toLocaleString('en-IN')} Peti`;
+      document.getElementById('stockTotalValuation').textContent = `₹${totalCostVal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+      document.getElementById('stockRetailRealization').textContent = `₹${totalRetailVal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+      document.getElementById('stockLowCount').textContent = `${lowCount} Items`;
+    }
+
+    
+    let currentAdjustProduct = null;
+    function openStockAdjustModal(p) {
+      currentAdjustProduct = p;
+      document.getElementById('adjustModalTitle').textContent = 'Adjust Stock: ' + p.name;
+      document.getElementById('adjustModalSubtitle').textContent = 'Current Stock: ' + p.stock + ' ' + p.unit;
+      document.getElementById('adjustStockInput').value = p.stock;
+      document.getElementById('adjustModal').classList.remove('hidden');
+    }
+
+    // --- 10. ORDERS / ADVANCE BOOKING ENGINE ---
+    function updateActiveOrdersBadge() {
+      const active = appState.orders.filter(o => o.status === 'Booked');
+      document.getElementById('activeOrdersBadge').textContent = active.length;
+    }
+
+    function renderOrdersTable() {
+      const tbody = document.getElementById('ordersTableBody');
+      tbody.innerHTML = '';
+
+      if (appState.orders.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-slate-400">No active advance orders recorded.</td></tr>`;
+        return;
+      }
+
+      appState.orders.forEach((ord, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition";
+        tr.innerHTML = `
+          <td class="p-2.5 font-bold text-slate-900">${ord.orderId}<br><span class="text-[10px] text-slate-400">${ord.date}</span></td>
+          <td class="p-2.5 font-medium">${ord.customer}<br><span class="text-[10px] text-slate-500">${ord.phone}</span></td>
+          <td class="p-2.5 text-slate-600">${ord.site}</td>
+          <td class="p-2.5 text-right font-black text-slate-900">₹${ord.total.toFixed(2)}</td>
+          <td class="p-2.5 text-right font-bold text-emerald-600">₹${ord.advance.toFixed(2)}</td>
+          <td class="p-2.5 text-right font-black text-rose-600">₹${ord.balance.toFixed(2)}</td>
+          <td class="p-2.5 text-center font-semibold text-amber-700">${ord.deliveryDate}</td>
+          <td class="p-2.5 text-center">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${ord.status === 'Booked' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">
+              ${ord.status}
+            </span>
+          </td>
+          <td class="p-2.5 text-center">
+            ${ord.status === 'Booked' ? `
+              <button class="fulfill-order-btn bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded text-[10px] font-bold transition">
+                Dispatch / Settle
+              </button>
+            ` : '<span class="text-slate-400 text-[10px]">Delivered</span>'}
+          </td>
+        `;
+
+        const fulfillBtn = tr.querySelector('.fulfill-order-btn');
+        if (fulfillBtn) {
+          fulfillBtn.addEventListener('click', () => {
+            ord.status = 'Delivered';
+            ord.balance = 0;
+            saveStorage();
+            updateActiveOrdersBadge();
+            renderOrdersTable();
+            showToast(`Order ${ord.orderId} marked as delivered & balance settled!`, 'success');
+          });
+        }
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    // --- 11. OPEX & EXPENSES ENGINE ---
+    function renderOpexTable() {
+      const tbody = document.getElementById('opexTableBody');
+      tbody.innerHTML = '';
+
+      let total = 0, rent = 0, salary = 0, misc = 0;
+
+      appState.opex.forEach(op => {
+        total += op.amount;
+        if (op.category === 'Showroom Rent') rent += op.amount;
+        else if (op.category === 'Staff Salary') salary += op.amount;
+        else misc += op.amount;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition";
+        tr.innerHTML = `
+          <td class="p-2.5 text-slate-500">${op.date}</td>
+          <td class="p-2.5 font-bold text-slate-800">${op.category}</td>
+          <td class="p-2.5 text-slate-600">${op.desc || '-'}</td>
+          <td class="p-2.5 text-slate-500">${op.mode}</td>
+          <td class="p-2.5 text-right font-black text-rose-700">₹${op.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('opexTotalAll').textContent = `₹${total.toLocaleString('en-IN')}`;
+      document.getElementById('opexRentTotal').textContent = `₹${rent.toLocaleString('en-IN')}`;
+      document.getElementById('opexSalaryTotal').textContent = `₹${salary.toLocaleString('en-IN')}`;
+      document.getElementById('opexMiscTotal').textContent = `₹${misc.toLocaleString('en-IN')}`;
+    }
+
+    // --- 12. CAPITAL, DRAWINGS & LOANS ENGINE ---
+    function renderCapitalDashboard() {
+      const cap = appState.capital;
+      const opening = cap.opening || 2000000;
+      const additional = cap.additional || 0;
+      const drawings = cap.drawings || 0;
+
+      // Calculate Interest on Capital: Opening * (Rate/100)
+      const interest = (opening * (cap.interestRate || 12)) / 100;
+
+      // Net Equity = Opening + Additional - Drawings + Interest
+      const netEquity = opening + additional - drawings + interest;
+
+      document.getElementById('capOpeningDisplay').textContent = `₹${opening.toLocaleString('en-IN')}`;
+      document.getElementById('capAdditionalDisplay').textContent = `₹${additional.toLocaleString('en-IN')}`;
+      document.getElementById('capDrawingsDisplay').textContent = `₹${drawings.toLocaleString('en-IN')}`;
+      document.getElementById('capInterestDisplay').textContent = `₹${interest.toLocaleString('en-IN')}`;
+      document.getElementById('capNetEquityDisplay').textContent = `₹${netEquity.toLocaleString('en-IN')}`;
+
+      // Render Capital Ledger
+      const capBody = document.getElementById('capitalLedgerBody');
+      capBody.innerHTML = '';
+      if (!cap.transactions || cap.transactions.length === 0) {
+        capBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">No capital adjustments recorded yet.</td></tr>`;
+      } else {
+        cap.transactions.forEach(t => {
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-slate-50 transition";
+          tr.innerHTML = `
+            <td class="p-2 text-slate-500">${t.date}</td>
+            <td class="p-2 font-bold ${t.type.includes('Additional') ? 'text-emerald-700' : 'text-rose-700'}">${t.type}</td>
+            <td class="p-2 text-slate-600">${t.note}</td>
+            <td class="p-2 text-right font-black">₹${t.amount.toLocaleString('en-IN')}</td>
+          `;
+          capBody.appendChild(tr);
+        });
+      }
+
+      // Render Loans Table
+      const loanBody = document.getElementById('loansTableBody');
+      loanBody.innerHTML = '';
+      let totalOut = 0;
+      appState.loans.forEach(l => {
+        totalOut += (l.principal - (l.paid || 0));
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-2 font-bold">${l.lender}</td>
+          <td class="p-2 text-right">₹${l.principal.toLocaleString('en-IN')}</td>
+          <td class="p-2 text-center">${l.rate}%</td>
+          <td class="p-2 text-right text-emerald-600">₹${(l.paid || 0).toLocaleString('en-IN')}</td>
+          <td class="p-2 text-right font-bold text-rose-600">₹${(l.principal - (l.paid || 0)).toLocaleString('en-IN')}</td>
+        `;
+        loanBody.appendChild(tr);
+      });
+      document.getElementById('totalOutstandingLoan').textContent = `₹${totalOut.toLocaleString('en-IN')}`;
+      if (appState.loans.length === 0) {
+        loanBody.innerHTML = `<tr><td colspan="5" class="p-3 text-center text-slate-400">Zero business debt. No active loans.</td></tr>`;
+      }
+    }
+
+    // --- 13. KHATA / UDHAAR LEDGER ENGINE ---
     function updateLedgerCount() {
-      const pending = appState.ledger.filter(l => l.status === 'Pending');
-      document.getElementById('ledgerCountBadge').textContent = pending.length;
+      // Aggregate pending balances from both Sales and Orders
+      let totalPending = 0;
+      let count = 0;
+
+      appState.sales.forEach(s => {
+        if (s.balance > 0) {
+          totalPending += s.balance;
+          count++;
+        }
+      });
+
+      document.getElementById('headerPendingUdhaarBadge').textContent = count;
+      document.getElementById('totalPendingUdhaar').textContent = `₹${totalPending.toFixed(2)}`;
     }
 
     function renderLedgerTable() {
@@ -1034,50 +2052,54 @@
       tbody.innerHTML = '';
 
       let totalPending = 0;
+      let totalSettled = 0;
       const customersSet = new Set();
 
-      appState.ledger.forEach((entry, idx) => {
-        if (entry.status === 'Pending') {
-          totalPending += entry.amount;
-          customersSet.add(entry.phone || entry.customer);
+      appState.sales.forEach(s => {
+        if (s.balance > 0) {
+          totalPending += s.balance;
+          customersSet.add(s.phone || s.customer);
+        } else {
+          totalSettled += s.total;
         }
 
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-50 transition";
         tr.innerHTML = `
-          <td class="p-2">
-            <strong>${entry.inv}</strong><br>
-            <span class="text-[10px] text-slate-400">${entry.date}</span>
+          <td class="p-2.5">
+            <strong>${s.inv}</strong><br>
+            <span class="text-[10px] text-slate-400">${s.date}</span>
           </td>
-          <td class="p-2">
-            <span class="font-bold text-slate-800">${entry.customer}</span><br>
-            <span class="text-[10px] text-slate-500">${entry.phone}</span>
+          <td class="p-2.5">
+            <span class="font-bold text-slate-900">${s.customer}</span><br>
+            <span class="text-[10px] text-slate-500">${s.phone}</span>
           </td>
-          <td class="p-2 text-right font-black ${entry.status === 'Pending' ? 'text-rose-600' : 'text-slate-400 line-through'}">
-            ₹${entry.amount.toFixed(2)}
-          </td>
-          <td class="p-2 text-center">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${entry.status === 'Pending' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">
-              ${entry.status}
+          <td class="p-2.5 text-right font-semibold text-slate-800">₹${s.total.toFixed(2)}</td>
+          <td class="p-2.5 text-right font-semibold text-emerald-600">₹${s.paid.toFixed(2)}</td>
+          <td class="p-2.5 text-right font-black ${s.balance > 0 ? 'text-rose-600' : 'text-slate-400'}">₹${s.balance.toFixed(2)}</td>
+          <td class="p-2.5 text-center">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${s.balance > 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">
+              ${s.balance > 0 ? 'Pending' : 'Settled'}
             </span>
           </td>
-          <td class="p-2 text-center">
-            ${entry.status === 'Pending' ? `
-              <button class="settle-btn bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded text-[10px] font-bold transition">
-                Mark Paid
+          <td class="p-2.5 text-center">
+            ${s.balance > 0 ? `
+              <button class="settle-bill-btn bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded text-[10px] font-bold transition">
+                Receive Balance
               </button>
-            ` : '<span class="text-slate-400 text-[10px]">Settled</span>'}
+            ` : '<span class="text-slate-400 text-[10px]">Fully Paid</span>'}
           </td>
         `;
 
-        const settleBtn = tr.querySelector('.settle-btn');
+        const settleBtn = tr.querySelector('.settle-bill-btn');
         if (settleBtn) {
           settleBtn.addEventListener('click', () => {
-            entry.status = 'Settled';
-            saveToStorage();
+            s.paid += s.balance;
+            s.balance = 0;
+            saveStorage();
             updateLedgerCount();
             renderLedgerTable();
-            showToast(`Settled Udhaar for ${entry.customer}`, 'success');
+            showToast(`Udhaar balance cleared for ${s.customer}!`, 'success');
           });
         }
 
@@ -1086,55 +2108,69 @@
 
       document.getElementById('totalPendingUdhaar').textContent = `₹${totalPending.toFixed(2)}`;
       document.getElementById('activeCreditAccounts').textContent = customersSet.size;
+      document.getElementById('totalSettledUdhaar').textContent = `₹${totalSettled.toFixed(2)}`;
 
-      if (appState.ledger.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">No credit bills recorded yet.</td></tr>`;
+      if (appState.sales.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">No transaction records found.</td></tr>`;
       }
     }
 
-    // --- 9. TILE CALCULATOR ENGINE ---
-    function updateTileCalculator() {
-      const sqftPerBox = parseFloat(document.getElementById('calcTileSize').value) || 16;
-      const len = parseFloat(document.getElementById('calcLength').value) || 0;
-      const wid = parseFloat(document.getElementById('calcWidth').value) || 0;
-      const direct = parseFloat(document.getElementById('calcDirectSqft').value) || 0;
-      
-      const wastageRate = parseFloat(document.querySelector('input[name="wastage"]:checked')?.value || 5);
-
-      let baseSqft = direct > 0 ? direct : (len * wid);
-      let totalSqftWithWastage = baseSqft + (baseSqft * wastageRate) / 100;
-      let petiRequired = Math.ceil(totalSqftWithWastage / sqftPerBox);
-
-      document.getElementById('calcResultPeti').textContent = `${petiRequired} Peti (Boxes)`;
-      document.getElementById('calcResultSqft').textContent = `Total Area: ${totalSqftWithWastage.toFixed(1)} Sq. Ft. (${baseSqft.toFixed(1)} + ${wastageRate}% wastage)`;
-    }
-
-    // --- 10. ATTACH ALL DOM LISTENERS ---
+    // --- 14. ATTACH EVENT LISTENERS ---
     document.addEventListener('DOMContentLoaded', () => {
-      loadFromStorage();
+      loadStorage();
       renderCategoryPills();
       renderProductGrid();
+      updateActiveOrdersBadge();
       updateLedgerCount();
 
-      // Tier Buttons Toggle
+      // Navigation Buttons
+      document.getElementById('navBillingBtn').addEventListener('click', () => switchView('viewBilling'));
+      document.getElementById('navStockBtn').addEventListener('click', () => switchView('viewStock'));
+      document.getElementById('navOrdersBtn').addEventListener('click', () => switchView('viewOrders'));
+      document.getElementById('navReportsBtn').addEventListener('click', () => switchView('viewReports'));
+      document.getElementById('navOpexBtn').addEventListener('click', () => switchView('viewOpex'));
+      document.getElementById('navCapitalBtn').addEventListener('click', () => switchView('viewCapital'));
+      document.getElementById('navLedgerBtn').addEventListener('click', () => switchView('viewLedger'));
+
+      // Direct Sale vs Advance Order Booking Toggle
+      const btnDirect = document.getElementById('typeDirectSale');
+      const btnAdvance = document.getElementById('typeAdvanceOrder');
+      const bookingRow = document.getElementById('orderBookingDetailsRow');
+      const billBtnText = document.getElementById('billBtnText');
+
+      btnDirect.addEventListener('click', () => {
+        appState.orderType = 'Direct Sale';
+        btnDirect.className = "px-2 py-0.5 rounded font-bold bg-emerald-600 text-white shadow";
+        btnAdvance.className = "px-2 py-0.5 rounded font-medium text-slate-600 hover:text-slate-900";
+        bookingRow.classList.add('hidden');
+        billBtnText.textContent = "Generate & Print Bill";
+      });
+
+      btnAdvance.addEventListener('click', () => {
+        appState.orderType = 'Advance Order';
+        btnAdvance.className = "px-2 py-0.5 rounded font-bold bg-amber-500 text-slate-950 shadow";
+        btnDirect.className = "px-2 py-0.5 rounded font-medium text-slate-600 hover:text-slate-900";
+        bookingRow.classList.remove('hidden');
+        billBtnText.textContent = "Book & Collect Advance";
+      });
+
+      // Price Tiers
       const btnB2C = document.getElementById('btnTierB2C');
       const btnB2B = document.getElementById('btnTierB2B');
-
       btnB2C.addEventListener('click', () => {
         appState.currentTier = 'b2c';
-        btnB2C.className = "px-2.5 py-1 text-xs rounded-md transition bg-amber-500 text-slate-950 font-bold shadow";
-        btnB2B.className = "px-2.5 py-1 text-xs rounded-md text-slate-300 hover:text-white transition";
+        btnB2C.className = "px-2 py-1 text-[11px] font-bold rounded-md bg-amber-500 text-slate-950 shadow";
+        btnB2B.className = "px-2 py-1 text-[11px] font-medium rounded-md text-slate-600 hover:text-slate-900";
         renderProductGrid();
       });
-
       btnB2B.addEventListener('click', () => {
         appState.currentTier = 'b2b';
-        btnB2B.className = "px-2.5 py-1 text-xs rounded-md transition bg-amber-500 text-slate-950 font-bold shadow";
-        btnB2C.className = "px-2.5 py-1 text-xs rounded-md text-slate-300 hover:text-white transition";
+        btnB2B.className = "px-2 py-1 text-[11px] font-bold rounded-md bg-amber-500 text-slate-950 shadow";
+        btnB2C.className = "px-2 py-1 text-[11px] font-medium rounded-md text-slate-600 hover:text-slate-900";
         renderProductGrid();
       });
 
-      // Search Box
+      // Search
       const searchInput = document.getElementById('searchInput');
       const clearSearchBtn = document.getElementById('clearSearchBtn');
       searchInput.addEventListener('input', (e) => {
@@ -1158,7 +2194,17 @@
         }
       });
 
-      // Discount inputs
+      // Freight & Labor Inputs
+      document.getElementById('freightInput').addEventListener('input', (e) => {
+        appState.freightCharge = parseFloat(e.target.value) || 0;
+        renderCartTotals();
+      });
+      document.getElementById('laborInput').addEventListener('input', (e) => {
+        appState.laborCharge = parseFloat(e.target.value) || 0;
+        renderCartTotals();
+      });
+
+      // Discounts & Tax
       document.getElementById('discountInput').addEventListener('input', (e) => {
         appState.discount = parseFloat(e.target.value) || 0;
         renderCartTotals();
@@ -1167,11 +2213,21 @@
         appState.discountType = e.target.value;
         renderCartTotals();
       });
-
-      // Tax Slab
       document.getElementById('taxSlabSelect').addEventListener('change', (e) => {
         appState.taxRate = parseFloat(e.target.value) || 0;
         renderCartTotals();
+      });
+
+      // Part Payment input
+      document.getElementById('partPaidAmount').addEventListener('input', () => {
+        const { grandTotal } = calculateBillingTotals();
+        updatePartPaymentCalculations(grandTotal);
+      });
+
+      document.getElementById('btnPayFull').addEventListener('click', () => {
+        const { grandTotal } = calculateBillingTotals();
+        document.getElementById('partPaidAmount').value = grandTotal.toFixed(2);
+        updatePartPaymentCalculations(grandTotal);
       });
 
       // Payment Mode Buttons
@@ -1179,60 +2235,269 @@
       payModeBtns.forEach(btn => {
         btn.addEventListener('click', () => {
           payModeBtns.forEach(b => {
-            b.className = "pay-mode-btn bg-slate-50 border border-slate-300 text-slate-700 font-semibold py-1.5 px-2 rounded-lg text-xs flex items-center justify-center gap-1 transition hover:bg-slate-100";
+            b.className = "pay-mode-btn bg-white border border-slate-300 text-slate-700 font-medium py-1 px-1.5 rounded-lg text-[11px] flex items-center justify-center gap-1";
           });
-          btn.className = "pay-mode-btn bg-emerald-50 border-2 border-emerald-500 text-emerald-800 font-bold py-1.5 px-2 rounded-lg text-xs flex items-center justify-center gap-1 transition";
+          btn.className = "pay-mode-btn bg-emerald-100 border-2 border-emerald-500 text-emerald-900 font-bold py-1 px-1.5 rounded-lg text-[11px] flex items-center justify-center gap-1";
           appState.paymentMode = btn.dataset.mode;
+          const { grandTotal } = calculateBillingTotals();
+          updatePartPaymentCalculations(grandTotal);
         });
       });
 
-      // UPI QR Modal Triggers
-      document.getElementById('showUpiQrBtn').addEventListener('click', openUpiQrModal);
+      // UPI Modal
+      document.getElementById('showUpiQrBtn').addEventListener('click', () => {
+        const { grandTotal } = calculateBillingTotals();
+        if (grandTotal <= 0) {
+          showToast('Cart is empty!', 'error');
+          return;
+        }
+
+        const paidVal = parseFloat(document.getElementById('partPaidAmount').value) || grandTotal;
+        const targetAmount = paidVal > 0 ? paidVal : grandTotal;
+
+        document.getElementById('upiModalAmount').textContent = `₹${targetAmount.toFixed(2)}`;
+        document.getElementById('upiModalVpa').textContent = appState.upiId;
+
+        const container = document.getElementById('upiQrCodeContainer');
+        container.innerHTML = '';
+
+        const inv = document.getElementById('invoiceNumber').textContent;
+        const upiUrl = `upi://pay?pa=${encodeURIComponent(appState.upiId)}&pn=${encodeURIComponent(appState.storeName)}&am=${targetAmount.toFixed(2)}&cu=INR&tn=${encodeURIComponent('Bill ' + inv)}`;
+
+        new QRCode(container, {
+          text: upiUrl,
+          width: 180,
+          height: 180,
+          colorDark: '#0f172a',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+
+        document.getElementById('upiModal').classList.remove('hidden');
+      });
+
       document.getElementById('closeUpiModalBtn').addEventListener('click', () => {
         document.getElementById('upiModal').classList.add('hidden');
       });
       document.getElementById('markUpiPaidBtn').addEventListener('click', () => {
         document.getElementById('upiModal').classList.add('hidden');
         appState.paymentMode = 'UPI';
-        generateBill();
+        processTransaction();
       });
 
-      // Bill Generation Triggers
-      document.getElementById('generateBillBtn').addEventListener('click', generateBill);
+      // Generate Bill Button
+      document.getElementById('generateBillBtn').addEventListener('click', processTransaction);
       document.getElementById('closeReceiptModalBtn').addEventListener('click', () => {
         document.getElementById('receiptModal').classList.add('hidden');
       });
-      document.getElementById('printReceiptBtn').addEventListener('click', () => {
-        window.print();
-      });
-      document.getElementById('newBillDoneBtn').addEventListener('click', resetCartForNextBill);
+      document.getElementById('printReceiptBtn').addEventListener('click', () => window.print());
+      document.getElementById('newBillDoneBtn').addEventListener('click', resetCartForNext);
 
-      // Tile Calculator Triggers
+      // Report Filter
+      document.getElementById('reportPeriodFilter').addEventListener('change', renderReports);
+
+      // Purchase Inward Modal Controls
+      const inwardModal = document.getElementById('inwardModal');
+      document.getElementById('openInwardModalBtn').addEventListener('click', () => {
+        const select = document.getElementById('inwardProductSelect');
+        select.innerHTML = '';
+        appState.products.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = `${p.name} (Current: ${p.stock} ${p.unit})`;
+          select.appendChild(opt);
+        });
+        inwardModal.classList.remove('hidden');
+      });
+      document.getElementById('closeInwardModalBtn').addEventListener('click', () => inwardModal.classList.add('hidden'));
+
+      document.getElementById('saveInwardBtn').addEventListener('click', () => {
+        const prodId = document.getElementById('inwardProductSelect').value;
+        const qty = parseInt(document.getElementById('inwardQty').value) || 0;
+        const cost = parseFloat(document.getElementById('inwardCost').value) || 0;
+        const supplier = document.getElementById('inwardSupplier').value || 'Morbi Factory';
+
+        if (qty <= 0) {
+          showToast('Please enter valid quantity!', 'error');
+          return;
+        }
+
+        const product = appState.products.find(p => p.id === prodId);
+        if (product) {
+          product.stock += qty;
+          if (cost > 0) product.cost = cost;
+          saveStorage();
+          renderStockTable();
+          renderProductGrid();
+          inwardModal.classList.add('hidden');
+          showToast(`Inward recorded! Added ${qty} ${product.unit} of ${product.name}`, 'success');
+        }
+      });
+
+      // OPEX Modal Controls
+      const opexModal = document.getElementById('opexModal');
+      document.getElementById('openAddOpexModalBtn').addEventListener('click', () => opexModal.classList.remove('hidden'));
+      document.getElementById('closeOpexModalBtn').addEventListener('click', () => opexModal.classList.add('hidden'));
+
+      document.getElementById('saveOpexBtn').addEventListener('click', () => {
+        const cat = document.getElementById('opexCategorySelect').value;
+        const amt = parseFloat(document.getElementById('opexAmount').value) || 0;
+        const mode = document.getElementById('opexModeSelect').value;
+        const desc = document.getElementById('opexDescription').value;
+
+        if (amt <= 0) {
+          showToast('Please enter valid amount!', 'error');
+          return;
+        }
+
+        appState.opex.unshift({
+          id: 'op-' + Date.now(),
+          date: new Date().toLocaleDateString('en-IN'),
+          category: cat,
+          desc: desc,
+          mode: mode,
+          amount: amt
+        });
+
+        saveStorage();
+        renderOpexTable();
+        opexModal.classList.add('hidden');
+        document.getElementById('opexAmount').value = '';
+        document.getElementById('opexDescription').value = '';
+        showToast(`Recorded OPEX of ₹${amt}`, 'success');
+      });
+
+      // Capital Entry Modal Controls
+      const capModal = document.getElementById('capitalModal');
+      document.getElementById('openCapitalEntryBtn').addEventListener('click', () => capModal.classList.remove('hidden'));
+      document.getElementById('closeCapitalModalBtn').addEventListener('click', () => capModal.classList.add('hidden'));
+
+      document.getElementById('saveCapitalEntryBtn').addEventListener('click', () => {
+        const type = document.getElementById('capEntryType').value;
+        const amt = parseFloat(document.getElementById('capEntryAmount').value) || 0;
+        const note = document.getElementById('capEntryNote').value || 'Capital adjustment';
+
+        if (amt <= 0) {
+          showToast('Please enter valid amount!', 'error');
+          return;
+        }
+
+        if (type === 'Additional Capital') {
+          appState.capital.additional = (appState.capital.additional || 0) + amt;
+        } else {
+          appState.capital.drawings = (appState.capital.drawings || 0) + amt;
+        }
+
+        if (!appState.capital.transactions) appState.capital.transactions = [];
+        appState.capital.transactions.unshift({
+          date: new Date().toLocaleDateString('en-IN'),
+          type: type,
+          note: note,
+          amount: amt
+        });
+
+        saveStorage();
+        renderCapitalDashboard();
+        capModal.classList.add('hidden');
+        document.getElementById('capEntryAmount').value = '';
+        document.getElementById('capEntryNote').value = '';
+        showToast(`Capital entry saved!`, 'success');
+      });
+
+      // Loans Modal Controls
+      const loanModal = document.getElementById('loanModal');
+      document.getElementById('openLoanEntryBtn').addEventListener('click', () => loanModal.classList.remove('hidden'));
+      document.getElementById('closeLoanModalBtn').addEventListener('click', () => loanModal.classList.add('hidden'));
+
+      document.getElementById('saveLoanBtn').addEventListener('click', () => {
+        const lender = document.getElementById('loanLender').value || 'Private Lender';
+        const principal = parseFloat(document.getElementById('loanPrincipal').value) || 0;
+        const rate = parseFloat(document.getElementById('loanRate').value) || 0;
+
+        if (principal <= 0) {
+          showToast('Please enter valid principal amount!', 'error');
+          return;
+        }
+
+        appState.loans.unshift({
+          id: 'loan-' + Date.now(),
+          lender: lender,
+          principal: principal,
+          rate: rate,
+          paid: 0
+        });
+
+        saveStorage();
+        renderCapitalDashboard();
+        loanModal.classList.add('hidden');
+        document.getElementById('loanLender').value = '';
+        document.getElementById('loanPrincipal').value = '';
+        showToast(`Loan recorded!`, 'success');
+      });
+
+      // Multi-User Switcher Controls
+      const userModal = document.getElementById('userModal');
+      document.getElementById('switchUserBtn').addEventListener('click', () => userModal.classList.remove('hidden'));
+      document.getElementById('closeUserModalBtn').addEventListener('click', () => userModal.classList.add('hidden'));
+
+      document.querySelectorAll('.user-select-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const user = btn.dataset.user;
+          appState.currentUser = user;
+          document.getElementById('currentUserLabel').textContent = user.split(' ')[0];
+          userModal.classList.add('hidden');
+          showToast(`Logged in as ${user}`, 'info');
+        });
+      });
+
+      // Tile Calculator Controls
       const calcModal = document.getElementById('calcModal');
       document.getElementById('openCalculatorBtn').addEventListener('click', () => {
         calcModal.classList.remove('hidden');
-        updateTileCalculator();
+        runTileCalculator();
       });
       document.getElementById('closeCalcModalBtn').addEventListener('click', () => calcModal.classList.add('hidden'));
       document.getElementById('calcCloseDoneBtn').addEventListener('click', () => calcModal.classList.add('hidden'));
 
+      function runTileCalculator() {
+        const sqftPerBox = parseFloat(document.getElementById('calcTileSize').value) || 16;
+        const len = parseFloat(document.getElementById('calcLength').value) || 0;
+        const wid = parseFloat(document.getElementById('calcWidth').value) || 0;
+        const direct = parseFloat(document.getElementById('calcDirectSqft').value) || 0;
+        const wastage = parseFloat(document.querySelector('input[name="wastage"]:checked')?.value || 5);
+
+        let base = direct > 0 ? direct : (len * wid);
+        let withWastage = base + (base * wastage) / 100;
+        let boxes = Math.ceil(withWastage / sqftPerBox);
+
+        document.getElementById('calcResultPeti').textContent = `${boxes} Peti (Boxes)`;
+        document.getElementById('calcResultSqft').textContent = `Total Area: ${withWastage.toFixed(1)} Sq.Ft (${base.toFixed(1)} + ${wastage}% wastage)`;
+      }
+
       ['calcTileSize', 'calcLength', 'calcWidth', 'calcDirectSqft'].forEach(id => {
-        document.getElementById(id).addEventListener('input', updateTileCalculator);
+        document.getElementById(id).addEventListener('input', runTileCalculator);
       });
       document.querySelectorAll('input[name="wastage"]').forEach(r => {
-        r.addEventListener('change', updateTileCalculator);
+        r.addEventListener('change', runTileCalculator);
       });
 
-      // Ledger Triggers
-      const ledgerModal = document.getElementById('ledgerModal');
-      document.getElementById('openLedgerBtn').addEventListener('click', () => {
-        renderLedgerTable();
-        ledgerModal.classList.remove('hidden');
+      
+      document.getElementById('closeAdjustModalBtn').addEventListener('click', () => {
+        document.getElementById('adjustModal').classList.add('hidden');
       });
-      document.getElementById('closeLedgerModalBtn').addEventListener('click', () => ledgerModal.classList.add('hidden'));
-      document.getElementById('closeLedgerBottomBtn').addEventListener('click', () => ledgerModal.classList.add('hidden'));
+      document.getElementById('saveAdjustModalBtn').addEventListener('click', () => {
+        if (currentAdjustProduct) {
+          const newVal = parseInt(document.getElementById('adjustStockInput').value);
+          currentAdjustProduct.stock = isNaN(newVal) || newVal < 0 ? 0 : newVal;
+          saveStorage();
+          renderStockTable();
+          renderProductGrid();
+          document.getElementById('adjustModal').classList.add('hidden');
+          showToast('Updated stock of ' + currentAdjustProduct.name, 'success');
+        }
+      });
 
-      // Settings Triggers
+      // Settings Modal
       const settingsModal = document.getElementById('settingsModal');
       document.getElementById('openSettingsBtn').addEventListener('click', () => {
         document.getElementById('settingStoreName').value = appState.storeName;
@@ -1246,69 +2511,64 @@
         appState.storeName = document.getElementById('settingStoreName').value.trim() || appState.storeName;
         appState.storeAddr = document.getElementById('settingStoreAddr').value.trim() || appState.storeAddr;
         appState.upiId = document.getElementById('settingUpiId').value.trim() || appState.upiId;
-        saveToStorage();
+        saveStorage();
         settingsModal.classList.add('hidden');
-        showToast('Settings saved successfully!', 'success');
+        showToast('Settings saved!', 'success');
       });
 
-      // Add New Product
+      // Quick Add Product in Settings
       document.getElementById('addNewProductBtn').addEventListener('click', () => {
         const name = document.getElementById('newProdName').value.trim();
         const cat = document.getElementById('newProdCat').value;
+        const cost = parseFloat(document.getElementById('newProdCost').value) || 0;
+        const b2b = parseFloat(document.getElementById('newProdB2B').value) || 0;
         const b2c = parseFloat(document.getElementById('newProdB2C').value) || 0;
-        const b2b = parseFloat(document.getElementById('newProdB2B').value) || b2c;
-        const sqft = parseFloat(document.getElementById('newProdSqft').value) || 1;
-        const stock = parseInt(document.getElementById('newProdStock').value) || 50;
+        const stock = parseInt(document.getElementById('newProdStock').value) || 100;
 
         if (!name || b2c <= 0) {
-          showToast('Please enter item name and valid price!', 'error');
+          showToast('Please enter valid product name & price!', 'error');
           return;
         }
 
-        const newId = 'prod-' + Date.now();
         const unit = (cat.includes('Sanitary') || cat.includes('Nameplates')) ? 'Pcs' : (cat.includes('Chemicals') ? 'Bag' : 'Peti');
 
         appState.products.unshift({
-          id: newId,
+          id: 'p-' + Date.now(),
           name: name,
           cat: cat,
+          cost: cost || (b2b * 0.8),
+          b2b: b2b || b2c,
           b2c: b2c,
-          b2b: b2b,
-          sqftPerPeti: sqft,
+          sqftPerPeti: 16,
           stock: stock,
           unit: unit
         });
 
-        saveToStorage();
+        saveStorage();
         renderProductGrid();
-        
-        // Reset Inputs
-        document.getElementById('newProdName').value = '';
-        document.getElementById('newProdB2C').value = '';
-        document.getElementById('newProdB2B').value = '';
-        document.getElementById('newProdSqft').value = '';
-        document.getElementById('newProdStock').value = '';
-
-        showToast(`Added ${name} to inventory!`, 'success');
+        renderStockTable();
+        settingsModal.classList.add('hidden');
+        showToast(`Added ${name} to master inventory!`, 'success');
       });
 
       // Backup & Reset
       document.getElementById('downloadBackupBtn').addEventListener('click', () => {
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", `SKG_Tiles_POS_Backup_${new Date().toISOString().slice(0,10)}.json`);
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-        showToast('Backup downloaded!', 'success');
+        const a = document.createElement('a');
+        a.setAttribute("href", dataStr);
+        a.setAttribute("download", `SKG_Tiles_ERP_Backup_${new Date().toISOString().slice(0,10)}.json`);
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        showToast('Backup downloaded successfully!', 'success');
       });
 
       document.getElementById('resetDemoBtn').addEventListener('click', () => {
         appState.products = DEFAULT_PRODUCTS;
-        saveToStorage();
+        saveStorage();
         renderProductGrid();
-        showToast('Reset to default tile inventory!', 'info');
+        renderStockTable();
+        showToast('Reset to default inventory data', 'info');
       });
 
     });
